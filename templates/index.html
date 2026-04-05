@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <title>AI Study App</title>
+    <style>
+        body { background:#0a0c10; color:#d4dde8; font-family:sans-serif; text-align:center; padding:20px; }
+        .section { display:none; margin-top: 20px; }
+        .section.active { display:block; }
+        .card { background: #161b22; border: 1px solid #30363d; padding: 20px; border-radius: 10px; margin: 20px auto; max-width: 500px; min-height: 80px; }
+        button { margin:5px; padding:10px 20px; cursor: pointer; background: #21262d; color: white; border: 1px solid #30363d; border-radius: 6px; }
+        #loading { display:none; color: #58a6ff; font-weight: bold; }
+        .quiz-item { text-align: left; max-width: 500px; margin: 10px auto; background: #161b22; padding: 10px; border-radius: 8px; }
+    </style>
+</head>
+<body>
+    <h1>AI Maturitní Pomocník</h1>
+    
+    <div style="border: 1px dashed #444; padding: 20px; border-radius: 10px; margin-bottom: 20px;">
+        <input type="file" id="fileInput" accept=".pdf,.txt">
+        <button onclick="uploadFile()">Nahrát PDF / Text</button>
+        <p id="loading">Gemma generuje otázky...</p>
+    </div>
+
+    <nav>
+        <button onclick="showSection('flash')">Kartičky</button>
+        <button onclick="showSection('quiz')">Test</button>
+    </nav>
+
+    <div id="flash" class="section active">
+        <div id="flashBox" class="card">Nahrajte soubor nahoře...</div>
+        <button onclick="toggleCard()">Otočit kartičku</button>
+        <button onclick="nextCard()">Další</button>
+    </div>
+
+    <div id="quiz" class="section">
+        <div id="quizBox"></div>
+    </div>
+
+    <script>
+        const API_KEY = "sk-0MlocXvcIJNS9usp-OlaAg";
+        let store = { flashcards: [], quiz: [] };
+        let idx = 0;
+        let isAns = false;
+
+        function showSection(id) {
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+        }
+
+        async function uploadFile() {
+            const file = document.getElementById('fileInput').files[0];
+            if(!file) return alert("Vyberte soubor!");
+            
+            document.getElementById('loading').style.display = "block";
+            const fd = new FormData();
+            fd.append("file", file);
+
+            try {
+                const r = await fetch("/upload", {
+                    method: "POST",
+                    headers: {"x-api-key": API_KEY},
+                    body: fd
+                });
+                const res = await r.json();
+                // Očištění JSONu od řečí AI
+                const clean = res.result.replace(/```json/g, "").replace(/```/g, "").trim();
+                store = JSON.parse(clean);
+                idx = 0;
+                renderFlash();
+                renderQuiz();
+                alert("Úspěšně vygenerováno!");
+            } catch(e) { alert("Chyba: " + e); }
+            finally { document.getElementById('loading').style.display = "none"; }
+        }
+
+        function renderFlash() {
+            const b = document.getElementById("flashBox");
+            if(store.flashcards.length > 0) {
+                b.innerHTML = isAns ? `<b>A:</b> ${store.flashcards[idx].a}` : `<b>Q:</b> ${store.flashcards[idx].q}`;
+            }
+        }
+        function toggleCard() { isAns = !isAns; renderFlash(); }
+        function nextCard() { if(idx < store.flashcards.length-1) { idx++; isAns=false; renderFlash(); } }
+
+        function renderQuiz() {
+            const box = document.getElementById("quizBox");
+            box.innerHTML = store.quiz.map((q, i) => `
+                <div class="quiz-item">
+                    <p><b>${i+1}. ${q.q}</b></p>
+                    ${q.options.map(o => `<label style="display:block"><input type="radio" name="q${i}" value="${o}"> ${o}</label>`).join('')}
+                </div>
+            `).join('');
+        }
+    </script>
+</body>
+</html>
