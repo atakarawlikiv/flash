@@ -2,71 +2,140 @@
 <html lang="cs">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI Maturitní Pomocník</title>
     <style>
-        /* --- MODERNÍ CSS DESIGN --- */
-        body { background: #0f172a; color: #e2e8f0; font-family: 'Segoe UI', system-ui, sans-serif; text-align: center; padding: 20px; margin: 0; }
-        h1 { color: #58a6ff; font-weight: 800; text-transform: uppercase; letter-spacing: 2px; }
+        /* --- APPLE LIQUID GLASS CSS --- */
+        :root {
+            --glass-bg: rgba(30, 15, 50, 0.4); /* Tmavý fialovo-černý poloprůhledný základ */
+            --glass-border: rgba(255, 255, 255, 0.12); /* Jemný světlý okraj simulující hranu skla */
+            --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
+            --accent-purple: #9333ea;
+            --accent-yellow: #facc15;
+            --text-main: #f8fafc;
+        }
+
+        body { 
+            margin: 0; 
+            padding: 20px; 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
+            /* Temné pozadí s rozmazanými "liquid" fleky pro efekt hloubky */
+            background-color: #05020a;
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(120, 40, 200, 0.25), transparent 30%),
+                radial-gradient(circle at 90% 80%, rgba(80, 20, 150, 0.3), transparent 35%);
+            background-attachment: fixed;
+            color: var(--text-main); 
+            text-align: center; 
+            min-height: 100vh;
+        }
         
-        .container { max-width: 800px; margin: 0 auto; padding: 20px; }
+        h1 { 
+            font-weight: 800; 
+            letter-spacing: 1px; 
+            background: linear-gradient(135deg, #d8b4fe, var(--text-main));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 30px;
+        }
         
-        /* Box pro nahrávání a navigace */
-        .header-box { background: #1e293b; padding: 25px; border-radius: 12px; border: 1px dashed #334155; margin-bottom: 30px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); transition: all 0.3s; }
-        .header-box:hover { border-color: #58a6ff; }
+        .container { max-width: 800px; margin: 0 auto; padding: 10px; }
         
-        button { margin: 10px 5px; padding: 12px 24px; cursor: pointer; background: #21262d; color: white; border: 1px solid #30363d; border-radius: 8px; transition: all 0.2s; font-weight: 600; font-size: 15px; }
-        button:hover { background: #30363d; border-color: #c9d1d9; transform: translateY(-1px); }
-        .nav-btn { background: #161b22; border-color: #30363d; color: #e2e8f0; }
-        .nav-btn.active { background: #58a6ff; color: #0f172a; border-color: transparent; }
+        /* Společná třída pro "skleněné" prvky */
+        .glass-panel { 
+            background: var(--glass-bg); 
+            backdrop-filter: blur(20px); 
+            -webkit-backdrop-filter: blur(20px); 
+            border: 1px solid var(--glass-border); 
+            border-radius: 24px; 
+            box-shadow: var(--glass-shadow); 
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .header-box { padding: 30px; margin-bottom: 30px; transition: transform 0.3s; }
+        .header-box:hover { border-color: rgba(147, 51, 234, 0.4); }
+
+        /* Vstupy a tlačítka */
+        input[type="file"] {
+            background: rgba(0,0,0,0.2); border: 1px solid var(--glass-border); padding: 10px; border-radius: 12px; color: white; cursor: pointer;
+        }
+        
+        button { 
+            margin: 8px 5px; padding: 12px 24px; cursor: pointer; 
+            background: rgba(255, 255, 255, 0.05); color: var(--text-main); 
+            border: 1px solid var(--glass-border); border-radius: 14px; 
+            transition: all 0.3s ease; font-weight: 600; font-size: 15px; 
+            backdrop-filter: blur(10px);
+        }
+        button:hover { 
+            background: rgba(255, 255, 255, 0.15); border-color: rgba(255,255,255,0.3); transform: translateY(-2px); 
+        }
+        
+        /* Specifické barvy tlačítek */
+        .nav-btn.active { background: rgba(147, 51, 234, 0.6); border-color: var(--accent-purple); box-shadow: 0 0 15px rgba(147, 51, 234, 0.4); }
+        .btn-purple { background: linear-gradient(135deg, rgba(147, 51, 234, 0.8), rgba(107, 33, 168, 0.8)); border: none; }
+        .btn-purple:hover { box-shadow: 0 0 20px rgba(147, 51, 234, 0.6); background: linear-gradient(135deg, rgba(168, 85, 247, 0.9), rgba(126, 34, 206, 0.9));}
+        
+        /* Žlutý akcent - používán zřídka */
+        .btn-yellow { background: rgba(250, 204, 21, 0.15); border-color: rgba(250, 204, 21, 0.4); color: var(--accent-yellow); }
+        .btn-yellow:hover { background: rgba(250, 204, 21, 0.3); border-color: var(--accent-yellow); box-shadow: 0 0 15px rgba(250, 204, 21, 0.3); }
 
         /* Kartičky (Flashcards) */
-        .card { background: #1e293b; border: 1px solid #334155; padding: 30px; border-radius: 12px; margin: 25px auto; max-width: 500px; min-height: 120px; box-shadow: 0 8px 24px rgba(0,0,0,0.3); font-size: 18px; line-height: 1.6; }
-        .flash-label { font-size: 14px; text-transform: uppercase; color: #94a3b8; letter-spacing: 1px; margin-bottom: 10px; display: block; }
+        .card { padding: 40px; margin: 25px auto; max-width: 550px; min-height: 150px; font-size: 20px; line-height: 1.5; display: flex; flex-direction: column; justify-content: center; }
+        .flash-label { font-size: 12px; text-transform: uppercase; color: #c084fc; letter-spacing: 2px; margin-bottom: 15px; font-weight: bold; }
         
         /* Test (Quiz) */
-        .quiz-item { text-align: left; max-width: 600px; margin: 20px auto; background: #1e293b; padding: 20px; border-radius: 10px; border: 1px solid #334155; transition: border-color 0.3s; }
-        .quiz-item p { font-weight: 600; margin-bottom: 15px; font-size: 16px; color: #f8fafc; }
-        .quiz-option { display: block; padding: 10px; border-radius: 6px; cursor: pointer; margin-bottom: 5px; }
-        .quiz-option:hover { background: #2a3a50; }
-        .quiz-item input { margin-right: 12px; vertical-align: middle; }
+        .quiz-item { text-align: left; max-width: 650px; margin: 25px auto; padding: 25px; transition: border-color 0.4s, box-shadow 0.4s; }
+        .quiz-item p { font-weight: 600; margin-top: 0; margin-bottom: 20px; font-size: 17px; }
+        .quiz-option { display: block; padding: 12px 15px; border-radius: 12px; cursor: pointer; margin-bottom: 8px; background: rgba(255,255,255,0.03); border: 1px solid transparent; transition: all 0.2s; }
+        .quiz-option:hover { background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.1); }
+        .quiz-item input { margin-right: 12px; accent-color: var(--accent-purple); width: 16px; height: 16px; }
         
-        /* Třídy pro hodnocení (zelená/červená) */
-        .quiz-correct { border-color: #2ea043; background: #16361a; }
-        .quiz-incorrect { border-color: #da3633; background: #3b1616; }
-        .quiz-results-card { background: #2ea043; color: #0f172a; padding: 15px; border-radius: 8px; margin: 20px auto; max-width: 400px; font-weight: 800; }
+        /* Hodnocení testu (Zelená/Červená se skleněným efektem) */
+        .quiz-correct { border-color: rgba(34, 197, 94, 0.5); box-shadow: 0 0 20px rgba(34, 197, 94, 0.15) inset; background: rgba(34, 197, 94, 0.05); }
+        .quiz-incorrect { border-color: rgba(239, 68, 68, 0.5); box-shadow: 0 0 20px rgba(239, 68, 68, 0.15) inset; background: rgba(239, 68, 68, 0.05); }
+        .quiz-results-card { background: linear-gradient(135deg, rgba(34, 197, 94, 0.8), rgba(21, 128, 61, 0.8)); color: white; padding: 20px; margin: 20px auto; max-width: 400px; font-size: 22px; font-weight: bold; border-radius: 16px; border: 1px solid rgba(255,255,255,0.3); }
         
-        #loading { display: none; color: #58a6ff; font-weight: bold; margin-top: 15px; }
+        #loading { display: none; color: #d8b4fe; font-weight: bold; margin-top: 20px; letter-spacing: 1px; animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0% { opacity: 0.6; } 50% { opacity: 1; text-shadow: 0 0 8px #9333ea; } 100% { opacity: 0.6; } }
+        
+        .controls { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; margin-top: 20px; }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>AI Maturitní Pomocník</h1>
         
-        <div class="header-box">
+        <div class="glass-panel header-box">
             <input type="file" id="fileInput" accept=".pdf,.txt">
-            <button onclick="uploadFile()">Nahrát PDF / Text</button>
-            <p id="loading">Gemma generuje 20 otázek...</p>
+            <button class="btn-purple" onclick="uploadFile()">Vygenerovat materiály</button>
+            <p id="loading">Gemma analyzuje text a tvoří 20 otázek. Prosím čekejte...</p>
         </div>
 
-        <nav>
-            <button onclick="showSection('flash')" class="nav-btn active">Kartičky</button>
-            <button onclick="showSection('quiz')" class="nav-btn">Test</button>
+        <nav style="margin-bottom: 20px;">
+            <button onclick="showSection('flash')" class="nav-btn active glass-panel">Studijní Kartičky</button>
+            <button onclick="showSection('quiz')" class="nav-btn glass-panel">Testové Otázky</button>
         </nav>
 
         <div id="flash" class="section" style="display:block">
-            <div id="flashBox" class="card">Nahrajte soubor nahoře...</div>
-            <div class="centered">
-                <button onclick="prevCard()" style="background:#3b82f6">Předchozí</button>
-                <button onclick="toggleCard()" style="background:#58a6ff; color:#0f172a;">Otočit</button>
-                <button onclick="nextCard()" style="background:#3b82f6">Další</button>
+            <div id="flashBox" class="glass-panel card">
+                <span style="opacity: 0.5;">Nahrajte soubor nahoře pro vytvoření kartiček...</span>
+            </div>
+            <div class="controls">
+                <button onclick="prevCard()">Předchozí</button>
+                <button class="btn-yellow" onclick="toggleCard()">Otočit kartičku</button>
+                <button onclick="nextCard()">Další</button>
             </div>
         </div>
 
         <div id="quiz" class="section" style="display:none">
             <div id="quizResults" style="display:none"></div>
             <div id="quizBox"></div>
-            <div class="centered" style="margin-top:20px;">
-                <button onclick="gradeQuiz()" style="background:#2ea043; border-color:#2ea043; font-size:16px;">Ohodnotit test</button>
+            
+            <div class="controls" style="margin-top:30px;">
+                <button onclick="gradeQuiz()" class="btn-purple" style="font-size:16px;">Vyhodnotit odpovědi</button>
+                <button onclick="resetQuiz()" class="btn-yellow" style="font-size:16px;">Obnovit test</button>
             </div>
         </div>
     </div>
@@ -86,7 +155,7 @@
 
         async function uploadFile() {
             const file = document.getElementById('fileInput').files[0];
-            if(!file) return alert("Vyberte soubor!");
+            if(!file) return alert("Vyberte prosím soubor!");
             document.getElementById('loading').style.display = "block";
             const fd = new FormData(); fd.append("file", file);
             try {
@@ -97,50 +166,48 @@
                 idx = 0;
                 renderFlash();
                 renderQuiz();
-                alert(`Úspěšně vygenerováno: ${store.flashcards.length} kartiček a ${store.quiz.length} testových otázek!`);
-            } catch(e) { alert("Chyba AI: " + e); }
+            } catch(e) { alert("Chyba AI. Zkuste to prosím znovu.\nDetail: " + e); }
             finally { document.getElementById('loading').style.display = "none"; }
         }
 
         function renderFlash() {
             const b = document.getElementById("flashBox");
-            if(store.flashcards.length > 0) {
+            if(store.flashcards && store.flashcards.length > 0) {
                 const item = store.flashcards[idx];
                 const label = isAns ? '<span class="flash-label">Odpověď</span>' : '<span class="flash-label">Otázka</span>';
-                b.innerHTML = `${label} ${isAns ? item.a : item.q}`;
+                b.innerHTML = `${label} <div>${isAns ? item.a : item.q}</div>`;
             }
         }
         function toggleCard() { isAns = !isAns; renderFlash(); }
         function nextCard() { if(idx < store.flashcards.length-1) { idx++; isAns=false; renderFlash(); } }
-        // PŘIDÁNA LOGIKA PŘEDCHOZÍHO KARTY
         function prevCard() { if(idx > 0) { idx--; isAns=false; renderFlash(); } }
 
         function renderQuiz() {
             const box = document.getElementById("quizBox");
-            document.getElementById('quizResults').style.display = 'none'; // Schová skóre
-            box.innerHTML = store.quiz.map((q, i) => `
-                <div class="quiz-item" id="q${i}">
-                    <p><b>${i+1}. ${q.q}</b></p>
-                    ${q.options.map(o => `
-                        <label class="quiz-option">
-                            <input type="radio" name="q${i}" value="${o}"> ${o}
-                        </label>
-                    `).join('')}
-                </div>
-            `).join('');
+            document.getElementById('quizResults').style.display = 'none';
+            if(store.quiz && store.quiz.length > 0) {
+                box.innerHTML = store.quiz.map((q, i) => `
+                    <div class="glass-panel quiz-item" id="q${i}">
+                        <p><b>${i+1}. ${q.q}</b></p>
+                        ${q.options.map(o => `
+                            <label class="quiz-option">
+                                <input type="radio" name="q${i}" value="${o}"> ${o}
+                            </label>
+                        `).join('')}
+                    </div>
+                `).join('');
+            }
         }
 
-        // PŘIDÁNA LOGIKA HODNOCENÍ TESTU
         function gradeQuiz() {
-            if(store.quiz.length === 0) return;
+            if(!store.quiz || store.quiz.length === 0) return;
             let score = 0;
             store.quiz.forEach((q, i) => {
                 const checkedOption = document.querySelector(`input[name="q${i}"]:checked`);
                 const questionDiv = document.getElementById(`q${i}`);
                 
                 if (checkedOption) {
-                    const userAnswer = checkedOption.value;
-                    if (userAnswer === q.correct) {
+                    if (checkedOption.value === q.correct) {
                         score++;
                         questionDiv.classList.add('quiz-correct');
                         questionDiv.classList.remove('quiz-incorrect');
@@ -149,15 +216,36 @@
                         questionDiv.classList.remove('quiz-correct');
                     }
                 } else {
-                    // Nebylo odpovězeno
                     questionDiv.classList.add('quiz-incorrect');
+                    questionDiv.classList.remove('quiz-correct');
                 }
             });
             const resCard = document.getElementById('quizResults');
             resCard.innerHTML = `Skóre: ${score} z ${store.quiz.length}`;
             resCard.classList.add('quiz-results-card');
             resCard.style.display = 'block';
-            resCard.scrollIntoView({ behavior: 'smooth' }); // Odroluje na skóre
+            resCard.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // NOVÁ FUNKCE PRO OBNOVENÍ TESTU
+        function resetQuiz() {
+            if(!store.quiz || store.quiz.length === 0) return;
+            
+            // Odznačí všechny radio buttony
+            document.querySelectorAll('.quiz-item input[type="radio"]').forEach(radio => {
+                radio.checked = false;
+            });
+            
+            // Odstraní zelené/červené zabarvení
+            document.querySelectorAll('.quiz-item').forEach(item => {
+                item.classList.remove('quiz-correct', 'quiz-incorrect');
+            });
+            
+            // Schová výsledkové skóre
+            document.getElementById('quizResults').style.display = 'none';
+            
+            // Odroluje zpět na začátek testu
+            document.getElementById('quizBox').scrollIntoView({ behavior: 'smooth' });
         }
     </script>
 </body>
