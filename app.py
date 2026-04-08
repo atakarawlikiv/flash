@@ -25,22 +25,18 @@ def upload():
 
     content = ""
     try:
-        # Čteme soubor přímo z paměti (stream)
         file_stream = file.read()
-        
         if file.filename.lower().endswith(".pdf"):
-            # Otevřeme PDF z paměti bez ukládání na disk
             doc = fitz.open(stream=file_stream, filetype="pdf")
             for page in doc:
                 content += page.get_text()
         else:
-            # Textový soubor převedeme na string
             content = file_stream.decode("utf-8")
-            
     except Exception as e:
         return jsonify({"error": f"Chyba zpracování: {e}"}), 400
 
-    prompt = f"Vytvoř JSON (flashcards: [{{q,a}}], quiz: [{{q,options,correct}}]) z textu: {content[:3500]}"
+    # UPRAVENÝ PROMPT PRO GEMMU PRO MINIMÁLNĚ 10+10 (pro stability omezíme text)
+    prompt = f"Z následujícího textu vytvoř studijní materiály v JSON formátu. **Musíš vytvořit PŘESNĚ 10 interaktivních flashcards a PŘESNĚ 10 testových otázek.** V textu vyber to nejdůležitější. JSON struktura: {{'flashcards': [{{'q','a'}}], 'quiz': [{{'q','options','correct'}}]}}. Text: {content[:3500]}"
 
     try:
         url = OPENAI_BASE_URL.rstrip("/") + "/chat/completions"
