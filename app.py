@@ -2,14 +2,12 @@ import os
 import requests
 import fitz  # PyMuPDF
 from flask import Flask, request, render_template, jsonify
+import io
 
 app = Flask(__name__)
-UPLOAD_FOLDER = "uploads"
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
-# Klíč ze screenshotu (pro tvůj server)
+# Klíč ze screenshotu
 AUTH_KEY = "sk-0MlocXvcIJNS9usp-OlaAg"
-# URL Olammy (Gemma)
 OPENAI_BASE_URL = os.environ.get("OPENAI_BASE_URL", "https://kurim.ithope.eu/v1")
 
 @app.route("/")
@@ -18,7 +16,6 @@ def index():
 
 @app.route("/upload", methods=["POST"])
 def upload():
-    # Kontrola autorizace
     if request.headers.get("x-api-key") != AUTH_KEY:
         return jsonify({"error": "Unauthorized"}), 401
 
@@ -26,23 +23,23 @@ def upload():
     if not file:
         return jsonify({"error": "Chybí soubor"}), 400
 
-    # Uložení a čtení
-    filepath = os.path.join(UPLOAD_FOLDER, file.filename)
-    file.save(filepath)
-
     content = ""
     try:
+        # Čteme soubor přímo z paměti (stream)
+        file_stream = file.read()
+        
         if file.filename.lower().endswith(".pdf"):
-            doc = fitz.open(filepath)
+            # Otevřeme PDF z paměti bez ukládání na disk
+            doc = fitz.open(stream=file_stream, filetype="pdf")
             for page in doc:
                 content += page.get_text()
         else:
-            with open(filepath, "r", encoding="utf-8") as f:
-                content = f.read()
+            # Textový soubor převedeme na string
+            content = file_stream.decode("utf-8")
+            
     except Exception as e:
-        return jsonify({"error": f"Chyba čtení: {e}"}), 400
+        return jsonify({"error": f"Chyba zpracování: {e}"}), 400
 
-    # Prompt pro Gemmu
     prompt = f"Vytvoř JSON (flashcards: [{{q,a}}], quiz: [{{q,options,correct}}]) z textu: {content[:3500]}"
 
     try:
@@ -57,8 +54,6 @@ def upload():
             "Content-Type": "application/json"
         }
         res = requests.post(url, json=payload, headers=headers, timeout=120)
-        
-        # Vrátíme výsledek AI
         return jsonify({"result": res.json()["choices"][0]["message"]["content"]})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
