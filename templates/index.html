@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Maturitní Pomocník | Premium</title>
+    <title>Maturitní Pomocník | AI</title>
     <style>
         :root {
             --glass-bg: rgba(255, 255, 255, 0.03);
@@ -12,158 +12,239 @@
             --accent-glow: rgba(168, 85, 247, 0.4);
         }
 
-        body { 
-            margin: 0; padding: 20px; font-family: 'Segoe UI', system-ui, sans-serif;
+        body {
+            margin: 0; padding: 20px;
+            font-family: 'Segoe UI', system-ui, sans-serif;
             background: #05020a; color: #f8fafc; text-align: center;
             background-image: radial-gradient(circle at 10% 20%, rgba(120, 40, 200, 0.15), transparent 40%);
             min-height: 100vh;
         }
 
         .container { max-width: 800px; margin: 0 auto; }
-        
-        .glass-panel { 
-            background: var(--glass-bg); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); 
+
+        .glass-panel {
+            background: var(--glass-bg); backdrop-filter: blur(15px);
             border: 1px solid var(--glass-border); border-radius: 24px; padding: 25px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
 
-        /* 3D KARTY */
-        .card-container { perspective: 1000px; margin: 25px auto; width: 100%; max-width: 500px; height: 300px; cursor: pointer; }
-        .card-inner { position: relative; width: 100%; height: 100%; transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1); transform-style: preserve-3d; }
+        /* 3D Kartičky */
+        .card-container {
+            perspective: 1000px; margin: 25px auto;
+            width: 100%; max-width: 500px; height: 300px; cursor: pointer;
+        }
+        .card-inner {
+            position: relative; width: 100%; height: 100%;
+            transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            transform-style: preserve-3d;
+        }
         .card-container.flipped .card-inner { transform: rotateY(180deg); }
-        .card-front, .card-back { 
-            position: absolute; width: 100%; height: 100%; backface-visibility: hidden; 
-            display: flex; align-items: center; justify-content: center; padding: 30px; 
-            box-sizing: border-box; border-radius: 24px; font-size: 1.3rem; border: 1px solid var(--glass-border);
+        .card-front, .card-back {
+            position: absolute; width: 100%; height: 100%; backface-visibility: hidden;
+            display: flex; align-items: center; justify-content: center;
+            padding: 30px; box-sizing: border-box; border-radius: 24px;
+            font-size: 1.3rem; border: 1px solid var(--glass-border);
             background: rgba(255,255,255,0.02);
         }
-        .card-back { transform: rotateY(180deg); background: rgba(168, 85, 247, 0.05); border-color: var(--accent); color: #e9d5ff; }
+        .card-back {
+            transform: rotateY(180deg);
+            background: rgba(168, 85, 247, 0.05);
+            border-color: var(--accent); color: #e9d5ff;
+        }
 
-        button { 
-            padding: 12px 28px; cursor: pointer; background: rgba(255,255,255,0.05); color: white; 
-            border: 1px solid var(--glass-border); border-radius: 12px; transition: 0.3s; font-weight: 600;
+        button {
+            padding: 12px 28px; cursor: pointer;
+            background: rgba(255,255,255,0.05); color: white;
+            border: 1px solid var(--glass-border); border-radius: 12px;
+            transition: 0.3s; font-weight: 600;
         }
         button:hover { background: var(--accent); box-shadow: 0 0 15px var(--accent-glow); border-color: transparent; }
-        .active-tab { background: var(--accent) !important; }
+        button:disabled { opacity: 0.5; cursor: not-allowed; }
+        .aktivni-tab { background: var(--accent) !important; }
 
-        input[type="file"] { margin: 15px 0; font-size: 14px; }
-        
-        .quiz-item { text-align: left; margin: 15px 0; padding: 20px; border-radius: 18px; border: 1px solid var(--glass-border); background: rgba(255,255,255,0.01); }
-        .quiz-correct { border-color: #22c55e; background: rgba(34,197,94,0.05); }
-        .quiz-incorrect { border-color: #ef4444; background: rgba(239,68,68,0.05); }
+        input[type="file"] { margin: 15px 0; font-size: 14px; color: #94a3b8; }
 
-        #loader { display: none; color: var(--accent); font-weight: bold; margin: 15px; animation: breathe 2s infinite; }
-        @keyframes breathe { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+        .quiz-item {
+            text-align: left; margin: 15px 0; padding: 20px;
+            border-radius: 18px; border: 1px solid var(--glass-border);
+            background: rgba(255,255,255,0.01);
+        }
+        .quiz-spravne { border-color: #22c55e; background: rgba(34,197,94,0.05); }
+        .quiz-spatne { border-color: #ef4444; background: rgba(239,68,68,0.05); }
+
+        #nacitani { display: none; color: var(--accent); font-weight: bold; margin: 15px; animation: dychani 2s infinite; }
+        @keyframes dychani { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+        .chyba-zprava {
+            color: #f87171; background: rgba(239,68,68,0.1);
+            border: 1px solid rgba(239,68,68,0.3);
+            border-radius: 12px; padding: 15px; margin: 10px 0;
+            display: none;
+        }
+
+        .pocitadlo {
+            color: #94a3b8; font-size: 0.9rem; margin: 5px 0;
+        }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1 style="font-weight: 800; font-size: 2.5rem; letter-spacing: -1px; margin-bottom: 5px;">Graduation Assistant</h1>
-        <p style="color: #94a3b8; margin-bottom: 30px;">Uč se efektivně s pomocí umělé inteligence.</p>
+<div class="container">
+    <h1 style="font-weight: 800; font-size: 2.5rem; letter-spacing: -1px; margin-bottom: 5px;">
+        Maturitní Pomocník
+    </h1>
+    <p style="color: #94a3b8; margin-bottom: 30px;">Uč se efektivně s pomocí umělé inteligence.</p>
 
-        <div class="glass-panel">
-            <input type="file" id="fileInput" accept=".pdf,.txt">
-            <button onclick="uploadFile()">Generovat materiály</button>
-            <div id="loader">Gemma analyzuje text...</div>
-        </div>
+    <div class="glass-panel">
+        <input type="file" id="vstupSoubor" accept=".pdf,.txt">
+        <br>
+        <button id="tlacitkoGenerovat" onclick="nahratSoubor()">Generovat materiály</button>
+        <div id="nacitani">Gemma analyzuje text...</div>
+        <div id="chybaZprava" class="chyba-zprava"></div>
+    </div>
 
-        <div style="margin: 25px 0; display: flex; gap: 10px; justify-content: center;">
-            <button id="btn-flash" class="active-tab" onclick="switchTab('flash')">Kartičky</button>
-            <button id="btn-quiz" onclick="switchTab('quiz')">Testy</button>
-        </div>
+    <div style="margin: 25px 0; display: flex; gap: 10px; justify-content: center;">
+        <button id="btn-karticky" class="aktivni-tab" onclick="prepnoutTab('karticky')">Kartičky</button>
+        <button id="btn-test" onclick="prepnoutTab('test')">Testy</button>
+    </div>
 
-        <div id="flash" class="tab-content">
-            <div class="card-container" onclick="this.classList.toggle('flipped')" id="flashCard">
-                <div class="card-inner">
-                    <div class="card-front"><div id="qText">Zde se objeví otázka...</div></div>
-                    <div class="card-back"><div id="aText">...a zde odpověď.</div></div>
-                </div>
+    <div id="karticky" class="tab-obsah">
+        <div class="pocitadlo" id="pocitadloKarticek">Nahraj soubor pro zobrazení kartiček</div>
+        <div class="card-container" onclick="this.classList.toggle('flipped')" id="kartickaPrvek">
+            <div class="card-inner">
+                <div class="card-front"><div id="textOtazky">Zde se objeví otázka...</div></div>
+                <div class="card-back"><div id="textOdpovedi">...a zde odpověď.</div></div>
             </div>
-            <div style="margin-top: 20px;">
-                <button onclick="prevCard()">←</button>
-                <button onclick="nextCard()">→</button>
-            </div>
         </div>
-
-        <div id="quiz" class="tab-content" style="display:none">
-            <div id="quizBox"></div>
-            <button onclick="gradeQuiz()" style="width: 100%; margin-top: 15px;">Vyhodnotit test</button>
+        <div style="margin-top: 20px;">
+            <button onclick="predchoziKartička()">←</button>
+            <button onclick="dalsiKartička()">→</button>
         </div>
     </div>
 
-    <script>
-        let store = { flashcards: [], quiz: [] }, idx = 0, currentFilename = "";
+    <div id="test" class="tab-obsah" style="display:none">
+        <div id="testBox"></div>
+        <button onclick="vyhodnotitTest()" style="width: 100%; margin-top: 15px;">Vyhodnotit test</button>
+    </div>
+</div>
 
-        function switchTab(tab) {
-            document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none');
-            document.querySelectorAll('button[id^="btn-"]').forEach(b => b.classList.remove('active-tab'));
-            document.getElementById(tab).style.display = 'block';
-            document.getElementById('btn-' + tab).classList.add('active-tab');
-        }
+<script>
+    let uloziste = { flashcards: [], quiz: [] };
+    let indexKarticky = 0;
+    let nazevSouboru = "";
 
-        async function uploadFile() {
-            const file = document.getElementById('fileInput').files[0];
-            if(!file) return alert("Vyberte soubor!");
-            currentFilename = file.name;
-            const loader = document.getElementById('loader');
-            loader.style.display = "block";
+    function prepnoutTab(tab) {
+        document.querySelectorAll('.tab-obsah').forEach(c => c.style.display = 'none');
+        document.querySelectorAll('button[id^="btn-"]').forEach(b => b.classList.remove('aktivni-tab'));
+        document.getElementById(tab).style.display = 'block';
+        document.getElementById('btn-' + tab).classList.add('aktivni-tab');
+    }
 
-            const fd = new FormData();
-            fd.append("file", file);
+    function zobrazitChybu(zprava) {
+        const el = document.getElementById('chybaZprava');
+        el.textContent = '⚠️ ' + zprava;
+        el.style.display = 'block';
+    }
 
+    function skrytChybu() {
+        document.getElementById('chybaZprava').style.display = 'none';
+    }
+
+    async function nahratSoubor() {
+        const soubor = document.getElementById('vstupSoubor').files[0];
+        if (!soubor) return alert("Vyberte soubor!");
+
+        nazevSouboru = soubor.name;
+        const nacitani = document.getElementById('nacitani');
+        const tlacitko = document.getElementById('tlacitkoGenerovat');
+
+        nacitani.style.display = "block";
+        tlacitko.disabled = true;
+        skrytChybu();
+
+        const fd = new FormData();
+        fd.append("file", soubor);
+
+        try {
+            const odpoved = await fetch("/upload", { method: "POST", body: fd });
+            const data = await odpoved.json();
+
+            if (data.error) throw new Error(data.error);
+
+            let parsovano;
             try {
-                const r = await fetch("/upload", { method: "POST", body: fd });
-                const res = await r.json();
-                if(res.error) throw new Error(res.error);
-                
-                store = JSON.parse(res.result);
-                idx = 0;
-                renderFlash();
-                renderQuiz();
-                switchTab('flash');
-            } catch(e) {
-                alert("Chyba při generování materiálu.");
-                console.error(e);
-            } finally {
-                loader.style.display = "none";
+                parsovano = JSON.parse(data.result);
+            } catch (e) {
+                throw new Error("AI vrátila neplatná data. Zkus to znovu.");
             }
+
+            if (!parsovano.flashcards || !parsovano.quiz) {
+                throw new Error("Neplatný formát odpovědi od AI.");
+            }
+
+            uloziste = parsovano;
+            indexKarticky = 0;
+            zobrazitKarticky();
+            zobrazitTest();
+            prepnoutTab('karticky');
+
+        } catch (e) {
+            zobrazitChybu(e.message || "Neznámá chyba při generování materiálu.");
+            console.error(e);
+        } finally {
+            nacitani.style.display = "none";
+            tlacitko.disabled = false;
         }
+    }
 
-        function renderFlash() {
-            if(!store.flashcards.length) return;
-            document.getElementById('qText').innerText = store.flashcards[idx].q;
-            document.getElementById('aText').innerText = store.flashcards[idx].a;
-            document.getElementById("flashCard").classList.remove('flipped');
-        }
+    function zobrazitKarticky() {
+        if (!uloziste.flashcards.length) return;
+        const k = uloziste.flashcards[indexKarticky];
+        document.getElementById('textOtazky').innerText = k.q;
+        document.getElementById('textOdpovedi').innerText = k.a;
+        document.getElementById('kartickaPrvek').classList.remove('flipped');
+        document.getElementById('pocitadloKarticek').textContent =
+            `Kartička ${indexKarticky + 1} z ${uloziste.flashcards.length} — klikni pro otočení`;
+    }
 
-        function nextCard() { if(idx < store.flashcards.length-1) { idx++; renderFlash(); } }
-        function prevCard() { if(idx > 0) { idx--; renderFlash(); } }
+    function dalsiKartička() {
+        if (indexKarticky < uloziste.flashcards.length - 1) { indexKarticky++; zobrazitKarticky(); }
+    }
+    function predchoziKartička() {
+        if (indexKarticky > 0) { indexKarticky--; zobrazitKarticky(); }
+    }
 
-        function renderQuiz() {
-            document.getElementById("quizBox").innerHTML = store.quiz.map((q, i) => `
-                <div class="quiz-item" id="q${i}">
-                    <p style="margin-top:0"><b>${i+1}. ${q.q}</b></p>
-                    ${q.options.map(o => `<label style="display:block; margin: 10px 0; cursor:pointer">
+    function zobrazitTest() {
+        document.getElementById("testBox").innerHTML = uloziste.quiz.map((q, i) => `
+            <div class="quiz-item" id="q${i}">
+                <p style="margin-top:0"><b>${i + 1}. ${q.q}</b></p>
+                ${q.options.map(o => `
+                    <label style="display:block; margin: 10px 0; cursor:pointer">
                         <input type="radio" name="q${i}" value="${o}"> ${o}
-                    </label>`).join('')}
-                </div>`).join('');
-        }
+                    </label>
+                `).join('')}
+            </div>
+        `).join('');
+    }
 
-        function gradeQuiz() {
-            let score = 0;
-            store.quiz.forEach((q, i) => {
-                const sel = document.querySelector(`input[name="q${i}"]:checked`);
-                const div = document.getElementById(`q${i}`);
-                if(sel && sel.value === q.correct) {
-                    score++;
-                    div.className = 'quiz-item quiz-correct';
-                } else {
-                    div.className = 'quiz-item quiz-incorrect';
-                }
-            });
-            alert(`Tvé skóre: ${score} z ${store.quiz.length}`);
-            fetch('/save_score', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({filename: currentFilename, score: score, total: store.quiz.length})});
-        }
-    </script>
+    function vyhodnotitTest() {
+        let skore = 0;
+        uloziste.quiz.forEach((q, i) => {
+            const vybrano = document.querySelector(`input[name="q${i}"]:checked`);
+            const div = document.getElementById(`q${i}`);
+            if (vybrano && vybrano.value === q.correct) {
+                skore++;
+                div.className = 'quiz-item quiz-spravne';
+            } else {
+                div.className = 'quiz-item quiz-spatne';
+            }
+        });
+        alert(`Tvé skóre: ${skore} z ${uloziste.quiz.length} 🎉`);
+        fetch('/save_score', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ filename: nazevSouboru, score: skore, total: uloziste.quiz.length })
+        });
+    }
+</script>
 </body>
 </html>
