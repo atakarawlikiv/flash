@@ -2,13 +2,12 @@ import os
 import requests
 import fitz  # PyMuPDF
 from flask import Flask, request, render_template, jsonify
-import io
 
 app = Flask(__name__)
 
-
+# DOPORUČENÍ: V produkci klíč schovej do proměnné prostředí
 AUTH_KEY = "sk-0MlocXvcIJNS9usp-OlaAg"
-OPENAI_BASE_URL = os.environ.get("OPENAI_BASE_URL", "https://kurim.ithope.eu/v1")
+OPENAI_BASE_URL = os.environ.get("OPENAI_BASE_URL", "[https://kurim.ithope.eu/v1](https://kurim.ithope.eu/v1)")
 
 @app.route("/")
 def index():
@@ -35,22 +34,39 @@ def upload():
     except Exception as e:
         return jsonify({"error": f"Chyba zpracování: {e}"}), 400
 
-    # UPRAVENÝ PROMPT PRO GEMMU PRO MINIMÁLNĚ 10+10 (pro stability omezíme text)
-    prompt = f"Z následujícího textu vytvoř studijní materiály v JSON formátu. **Musíš vytvořit PŘESNĚ 10 interaktivních flashcards a PŘESNĚ 10 testových otázek.** V textu vyber to nejdůležitější. JSON struktura: {{'flashcards': [{{'q','a'}}], 'quiz': [{{'q','options','correct'}}]}}. Text: {content[:3500]}"
+    # Čistý prompt pro stabilní JSON
+    prompt = f"""Z textu vytvoř přesně 10 kartiček a 10 testových otázek. 
+    Výstup musí být POUZE validní JSON bez doprovodného textu.
+    Struktura:
+    {{
+      "flashcards": [{{"q": "otázka", "a": "odpověď"}}],
+      "quiz": [{{"q": "otázka", "options": ["volba1", "volba2", "volba3", "volba4"], "correct": "přesná_textová_shoda_volby"}}]
+    }}
+    Text: {content[:3800]}"""
 
     try:
         url = OPENAI_BASE_URL.rstrip("/") + "/chat/completions"
         payload = {
             "model": "gemma3:27b",
-            "messages": [{"role": "user", "content": prompt}],
-            "temperature": 0.2
+            "messages": [
+                {"role": "system", "content": "Jsi JSON generátor. Odpovídáš pouze ve formátu JSON."},
+                {"role": "user", "content": prompt}
+            ],
+            "temperature": 0.1
         }
         headers = {
             "Authorization": f"Bearer {AUTH_KEY}",
             "Content-Type": "application/json"
         }
+        
         res = requests.post(url, json=payload, headers=headers, timeout=120)
-        return jsonify({"result": res.json()["choices"][0]["message"]["content"]})
+        res_data = res.json()
+        
+        # Ošetření výstupu (odstranění ```json a dalších nečistot)
+        raw_content = res_data["choices"][0]["message"]["content"]
+        clean_json = raw_content.replace("```json", "").replace("```", "").strip()
+        
+        return jsonify({"result": clean_json})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
