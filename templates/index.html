@@ -6,76 +6,77 @@
     <title>AI Maturitní Pomocník | Premium</title>
     <style>
         :root {
-            --glass-bg: rgba(25, 10, 40, 0.6);
-            --glass-border: rgba(255, 255, 255, 0.12);
-            --accent-purple: #a855f7;
-            --accent-glow: rgba(168, 85, 247, 0.5);
-            --text-main: #f8fafc;
+            --glass-bg: rgba(255, 255, 255, 0.03);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --accent: #a855f7;
+            --accent-glow: rgba(168, 85, 247, 0.4);
         }
 
         body { 
-            margin: 0; padding: 20px; font-family: 'Inter', -apple-system, sans-serif;
-            background: #030008; color: var(--text-main); text-align: center;
-            background-image: radial-gradient(circle at 15% 15%, rgba(120, 40, 200, 0.2), transparent 40%);
+            margin: 0; padding: 20px; font-family: 'Segoe UI', system-ui, sans-serif;
+            background: #05020a; color: #f8fafc; text-align: center;
+            background-image: radial-gradient(circle at 10% 20%, rgba(120, 40, 200, 0.15), transparent 40%);
             min-height: 100vh;
         }
 
         .container { max-width: 800px; margin: 0 auto; }
         
-        .glass { 
-            background: var(--glass-bg); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); 
-            border: 1px solid var(--glass-border); border-radius: 24px; padding: 30px;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+        .glass-panel { 
+            background: var(--glass-bg); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); 
+            border: 1px solid var(--glass-border); border-radius: 24px; padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
 
-        /* 3D KARTA */
-        .card-container { perspective: 1000px; margin: 30px auto; width: 100%; max-width: 500px; height: 300px; cursor: pointer; }
+        /* 3D KARTY */
+        .card-container { perspective: 1000px; margin: 25px auto; width: 100%; max-width: 500px; height: 300px; cursor: pointer; }
         .card-inner { position: relative; width: 100%; height: 100%; transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1); transform-style: preserve-3d; }
         .card-container.flipped .card-inner { transform: rotateY(180deg); }
         .card-front, .card-back { 
             position: absolute; width: 100%; height: 100%; backface-visibility: hidden; 
             display: flex; align-items: center; justify-content: center; padding: 30px; 
-            box-sizing: border-box; border-radius: 24px; font-size: 20px; border: 1px solid var(--glass-border);
+            box-sizing: border-box; border-radius: 24px; font-size: 1.3rem; border: 1px solid var(--glass-border);
+            background: rgba(255,255,255,0.02);
         }
-        .card-back { transform: rotateY(180deg); background: rgba(168, 85, 247, 0.1); border-color: var(--accent-purple); }
+        .card-back { transform: rotateY(180deg); background: rgba(168, 85, 247, 0.05); border-color: var(--accent); color: #e9d5ff; }
 
         button { 
-            padding: 12px 24px; cursor: pointer; background: rgba(255,255,255,0.05); color: white; 
-            border: 1px solid var(--glass-border); border-radius: 14px; transition: 0.3s; font-weight: 600;
+            padding: 12px 28px; cursor: pointer; background: rgba(255,255,255,0.05); color: white; 
+            border: 1px solid var(--glass-border); border-radius: 12px; transition: 0.3s; font-weight: 600;
         }
-        button:hover { background: var(--accent-purple); box-shadow: 0 0 20px var(--accent-glow); border-color: transparent; }
+        button:hover { background: var(--accent); box-shadow: 0 0 15px var(--accent-glow); border-color: transparent; }
+        .active-tab { background: var(--accent) !important; }
 
-        .btn-active { background: var(--accent-purple); border-color: transparent; }
+        input[type="file"] { margin: 15px 0; font-size: 14px; }
+        
+        .quiz-item { text-align: left; margin: 15px 0; padding: 20px; border-radius: 18px; border: 1px solid var(--glass-border); background: rgba(255,255,255,0.01); }
+        .quiz-correct { border-color: #22c55e; background: rgba(34,197,94,0.05); }
+        .quiz-incorrect { border-color: #ef4444; background: rgba(239,68,68,0.05); }
 
-        .quiz-item { text-align: left; margin: 20px 0; padding: 25px; border-radius: 20px; background: rgba(255,255,255,0.02); }
-        .quiz-correct { border: 1px solid #22c55e; background: rgba(34,197,94,0.1); }
-        .quiz-incorrect { border: 1px solid #ef4444; background: rgba(239,68,68,0.1); }
-
-        #loading { display: none; color: var(--accent-purple); font-weight: bold; margin: 20px; animation: pulse 1.5s infinite; }
-        @keyframes pulse { 50% { opacity: 0.4; } }
+        #loader { display: none; color: var(--accent); font-weight: bold; margin: 15px; animation: breathe 2s infinite; }
+        @keyframes breathe { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1 style="font-size: 2.5rem; margin-bottom: 10px;">🎓 Maturitní AI Asistent</h1>
-        <p style="color: #94a3b8; margin-bottom: 30px;">Nahraj dokument a začni se učit chytře.</p>
+        <h1 style="font-weight: 800; font-size: 2.5rem; letter-spacing: -1px; margin-bottom: 5px;">Graduation Assistant</h1>
+        <p style="color: #94a3b8; margin-bottom: 30px;">Uč se efektivně s pomocí umělé inteligence.</p>
 
-        <div class="glass">
+        <div class="glass-panel">
             <input type="file" id="fileInput" accept=".pdf,.txt">
-            <button onclick="uploadFile()">✨ Generovat</button>
-            <p id="loading">Gemma analyzuje text...</p>
+            <button onclick="uploadFile()">Generovat materiály</button>
+            <div id="loader">Gemma analyzuje text...</div>
         </div>
 
-        <div style="margin: 30px 0; display: flex; gap: 10px; justify-content: center;">
-            <button id="nav-flash" class="btn-active" onclick="showSection('flash')">Kartičky</button>
-            <button id="nav-quiz" onclick="showSection('quiz')">Test</button>
+        <div style="margin: 25px 0; display: flex; gap: 10px; justify-content: center;">
+            <button id="btn-flash" class="active-tab" onclick="switchTab('flash')">Kartičky</button>
+            <button id="btn-quiz" onclick="switchTab('quiz')">Testy</button>
         </div>
 
-        <div id="flash" class="section">
+        <div id="flash" class="tab-content">
             <div class="card-container" onclick="this.classList.toggle('flipped')" id="flashCard">
                 <div class="card-inner">
-                    <div class="glass card-front"><div id="qText">Sem přijde otázka...</div></div>
-                    <div class="glass card-back"><div id="aText">...a sem odpověď.</div></div>
+                    <div class="card-front"><div id="qText">Zde se objeví otázka...</div></div>
+                    <div class="card-back"><div id="aText">...a zde odpověď.</div></div>
                 </div>
             </div>
             <div style="margin-top: 20px;">
@@ -84,27 +85,27 @@
             </div>
         </div>
 
-        <div id="quiz" class="section" style="display:none">
+        <div id="quiz" class="tab-content" style="display:none">
             <div id="quizBox"></div>
-            <button onclick="gradeQuiz()" style="width: 100%; margin-top: 20px;">Vyhodnotit výsledky</button>
+            <button onclick="gradeQuiz()" style="width: 100%; margin-top: 15px;">Vyhodnotit test</button>
         </div>
     </div>
 
     <script>
-        let store = { flashcards: [], quiz: [] }, idx = 0, currentFile = "";
+        let store = { flashcards: [], quiz: [] }, idx = 0, currentFilename = "";
 
-        function showSection(id) {
-            document.querySelectorAll('.section').forEach(s => s.style.display = 'none');
-            document.querySelectorAll('[id^="nav-"]').forEach(b => b.classList.remove('btn-active'));
-            document.getElementById(id).style.display = 'block';
-            document.getElementById('nav-' + id).classList.add('btn-active');
+        function switchTab(tab) {
+            document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none');
+            document.querySelectorAll('button[id^="btn-"]').forEach(b => b.classList.remove('active-tab'));
+            document.getElementById(tab).style.display = 'block';
+            document.getElementById('btn-' + tab).classList.add('active-tab');
         }
 
         async function uploadFile() {
             const file = document.getElementById('fileInput').files[0];
             if(!file) return alert("Vyberte soubor!");
-            currentFile = file.name;
-            const loader = document.getElementById('loading');
+            currentFilename = file.name;
+            const loader = document.getElementById('loader');
             loader.style.display = "block";
 
             const fd = new FormData();
@@ -115,15 +116,14 @@
                 const res = await r.json();
                 if(res.error) throw new Error(res.error);
                 
-                // Oprava pro případ, že AI vrátí string místo objektu
-                store = typeof res.result === 'string' ? JSON.parse(res.result) : res.result;
+                store = JSON.parse(res.result);
                 idx = 0;
                 renderFlash();
                 renderQuiz();
-                alert("Hotovo! Materiály jsou připraveny.");
+                switchTab('flash');
             } catch(e) {
+                alert("Chyba při generování materiálu.");
                 console.error(e);
-                alert("Chyba při generování: " + e.message);
             } finally {
                 loader.style.display = "none";
             }
@@ -142,8 +142,8 @@
         function renderQuiz() {
             document.getElementById("quizBox").innerHTML = store.quiz.map((q, i) => `
                 <div class="quiz-item" id="q${i}">
-                    <p><b>${i+1}. ${q.q}</b></p>
-                    ${q.options.map(o => `<label style="display:block; margin: 8px 0; cursor:pointer">
+                    <p style="margin-top:0"><b>${i+1}. ${q.q}</b></p>
+                    ${q.options.map(o => `<label style="display:block; margin: 10px 0; cursor:pointer">
                         <input type="radio" name="q${i}" value="${o}"> ${o}
                     </label>`).join('')}
                 </div>`).join('');
@@ -162,7 +162,7 @@
                 }
             });
             alert(`Tvé skóre: ${score} z ${store.quiz.length}`);
-            fetch('/save_score', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({filename: currentFile, score: score, total: store.quiz.length})});
+            fetch('/save_score', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({filename: currentFilename, score: score, total: store.quiz.length})});
         }
     </script>
 </body>
