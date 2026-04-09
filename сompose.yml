@@ -1,27 +1,20 @@
-version: '3.8'
-
 services:
   web:
     build: .
     ports:
-      - "5000:5000"
-    env_file:
-      - .env
+      - "5000"
     environment:
-      # Tady to definujeme NAPŘÍMO, aby to Python nemohl minout
       - DATABASE_URL=postgresql://admin:tajneheslo@db:5432/maturita
+      - OPENAI_BASE_URL=https://kurim.ithope.eu/v1
+      - AUTH_KEY=sk-0MlocXvcIJNS9usp-OlaAg
     depends_on:
       - db
     restart: on-failure
 
   db:
-    image: postgres:15
+    image: postgres:16-alpine
     environment:
       - POSTGRES_USER=admin
       - POSTGRES_PASSWORD=tajneheslo
       - POSTGRES_DB=maturita
-    volumes:
-      - pgdata:/var/lib/postgresql/data
-
-volumes:
-  pgdata:
+      - PGDATA=/data/pgdata
