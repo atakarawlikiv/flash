@@ -40,7 +40,7 @@ def cekej_na_db():
 cekej_na_db()
 
 # Konfigurace AI
-AUTH_KEY = os.environ.get("AUTH_KEY", "")
+AUTH_KEY = os.environ.get("OPENAI_API_KEY", "")
 BASE_URL = os.environ.get("OPENAI_BASE_URL", "https://kurim.ithope.eu/v1").rstrip("/")
 
 @app.route("/")
