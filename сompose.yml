@@ -6,7 +6,7 @@ services:
     environment:
       - DATABASE_URL=postgresql://admin:tajneheslo@db:5432/maturita
       - OPENAI_BASE_URL=https://kurim.ithope.eu/v1
-      - AUTH_KEY=sk-0MlocXvcIJNS9usp-OlaAg
+      - OPENAI_API_KEY=sk-0MlocXvcIJNS9usp-OlaAg
     depends_on:
       - db
     restart: on-failure
