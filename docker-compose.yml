@@ -8,9 +8,11 @@ services:
     env_file:
       - .env
     environment:
+      # Tady to definujeme NAPŘÍMO, aby to Python nemohl minout
       - DATABASE_URL=postgresql://admin:tajneheslo@db:5432/maturita
     depends_on:
       - db
+    restart: on-failure
 
   db:
     image: postgres:15
