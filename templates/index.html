@@ -5,10 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI Maturitní Pomocník</title>
     <style>
-        /* --- APPLE LIQUID GLASS CSS --- */
         :root {
-            --glass-bg: rgba(30, 15, 50, 0.4); /* Tmavý fialovo-černý poloprůhledný základ */
-            --glass-border: rgba(255, 255, 255, 0.12); /* Jemný světlý okraj simulující hranu skla */
+            --glass-bg: rgba(30, 15, 50, 0.4);
+            --glass-border: rgba(255, 255, 255, 0.12);
             --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
             --accent-purple: #9333ea;
             --accent-yellow: #facc15;
@@ -16,91 +15,62 @@
         }
 
         body { 
-            margin: 0; 
-            padding: 20px; 
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
-            /* Temné pozadí s rozmazanými "liquid" fleky pro efekt hloubky */
+            margin: 0; padding: 20px; font-family: -apple-system, sans-serif;
             background-color: #05020a;
             background-image: 
-                radial-gradient(circle at 10% 20%, rgba(120, 40, 200, 0.25), transparent 30%),
-                radial-gradient(circle at 90% 80%, rgba(80, 20, 150, 0.3), transparent 35%);
+                radial-gradient(circle at 10% 20%, rgba(120, 40, 200, 0.2), transparent 30%),
+                radial-gradient(circle at 90% 80%, rgba(80, 20, 150, 0.2), transparent 35%);
             background-attachment: fixed;
-            color: var(--text-main); 
-            text-align: center; 
-            min-height: 100vh;
+            color: var(--text-main); text-align: center; min-height: 100vh;
         }
-        
-        h1 { 
-            font-weight: 800; 
-            letter-spacing: 1px; 
-            background: linear-gradient(135deg, #d8b4fe, var(--text-main));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            margin-bottom: 30px;
-        }
-        
-        .container { max-width: 800px; margin: 0 auto; padding: 10px; }
-        
-        /* Společná třída pro "skleněné" prvky */
+
+        .container { max-width: 800px; margin: 0 auto; }
         .glass-panel { 
-            background: var(--glass-bg); 
-            backdrop-filter: blur(20px); 
-            -webkit-backdrop-filter: blur(20px); 
-            border: 1px solid var(--glass-border); 
-            border-radius: 24px; 
-            box-shadow: var(--glass-shadow); 
-            position: relative;
-            overflow: hidden;
+            background: var(--glass-bg); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); 
+            border: 1px solid var(--glass-border); border-radius: 24px; box-shadow: var(--glass-shadow); 
         }
-        
-        .header-box { padding: 30px; margin-bottom: 30px; transition: transform 0.3s; }
-        .header-box:hover { border-color: rgba(147, 51, 234, 0.4); }
 
-        /* Vstupy a tlačítka */
-        input[type="file"] {
-            background: rgba(0,0,0,0.2); border: 1px solid var(--glass-border); padding: 10px; border-radius: 12px; color: white; cursor: pointer;
-        }
+        .header-box { padding: 30px; margin-bottom: 30px; }
         
+        /* 3D KARTY */
+        .card-container {
+            perspective: 1000px; margin: 25px auto; width: 100%; max-width: 550px; height: 250px; cursor: pointer;
+        }
+        .card-inner {
+            position: relative; width: 100%; height: 100%; text-align: center;
+            transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            transform-style: preserve-3d;
+        }
+        .card-container.flipped .card-inner { transform: rotateY(180deg); }
+        .card-front, .card-back {
+            position: absolute; width: 100%; height: 100%; backface-visibility: hidden;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            padding: 30px; box-sizing: border-box; border-radius: 24px; font-size: 20px;
+        }
+        .card-back { transform: rotateY(180deg); border-color: var(--accent-purple); }
+        .flash-label { font-size: 12px; text-transform: uppercase; color: #c084fc; letter-spacing: 2px; margin-bottom: 10px; font-weight: bold; }
+
+        /* TLAČÍTKA */
         button { 
-            margin: 8px 5px; padding: 12px 24px; cursor: pointer; 
-            background: rgba(255, 255, 255, 0.05); color: var(--text-main); 
-            border: 1px solid var(--glass-border); border-radius: 14px; 
-            transition: all 0.3s ease; font-weight: 600; font-size: 15px; 
-            backdrop-filter: blur(10px);
+            padding: 12px 24px; cursor: pointer; background: rgba(255, 255, 255, 0.05); color: white; 
+            border: 1px solid var(--glass-border); border-radius: 14px; transition: 0.3s; font-weight: 600;
         }
-        button:hover { 
-            background: rgba(255, 255, 255, 0.15); border-color: rgba(255,255,255,0.3); transform: translateY(-2px); 
-        }
-        
-        /* Specifické barvy tlačítek */
-        .nav-btn.active { background: rgba(147, 51, 234, 0.6); border-color: var(--accent-purple); box-shadow: 0 0 15px rgba(147, 51, 234, 0.4); }
-        .btn-purple { background: linear-gradient(135deg, rgba(147, 51, 234, 0.8), rgba(107, 33, 168, 0.8)); border: none; }
-        .btn-purple:hover { box-shadow: 0 0 20px rgba(147, 51, 234, 0.6); background: linear-gradient(135deg, rgba(168, 85, 247, 0.9), rgba(126, 34, 206, 0.9));}
-        
-        /* Žlutý akcent - používán zřídka */
-        .btn-yellow { background: rgba(250, 204, 21, 0.15); border-color: rgba(250, 204, 21, 0.4); color: var(--accent-yellow); }
-        .btn-yellow:hover { background: rgba(250, 204, 21, 0.3); border-color: var(--accent-yellow); box-shadow: 0 0 15px rgba(250, 204, 21, 0.3); }
+        button:hover { background: rgba(255, 255, 255, 0.15); transform: translateY(-2px); }
+        .nav-btn.active { background: rgba(147, 51, 234, 0.6); border-color: var(--accent-purple); }
+        .btn-purple { background: var(--accent-purple); border: none; }
+        .btn-yellow { color: var(--accent-yellow); border-color: var(--accent-yellow); }
 
-        /* Kartičky (Flashcards) */
-        .card { padding: 40px; margin: 25px auto; max-width: 550px; min-height: 150px; font-size: 20px; line-height: 1.5; display: flex; flex-direction: column; justify-content: center; }
-        .flash-label { font-size: 12px; text-transform: uppercase; color: #c084fc; letter-spacing: 2px; margin-bottom: 15px; font-weight: bold; }
-        
-        /* Test (Quiz) */
-        .quiz-item { text-align: left; max-width: 650px; margin: 25px auto; padding: 25px; transition: border-color 0.4s, box-shadow 0.4s; }
-        .quiz-item p { font-weight: 600; margin-top: 0; margin-bottom: 20px; font-size: 17px; }
-        .quiz-option { display: block; padding: 12px 15px; border-radius: 12px; cursor: pointer; margin-bottom: 8px; background: rgba(255,255,255,0.03); border: 1px solid transparent; transition: all 0.2s; }
-        .quiz-option:hover { background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.1); }
-        .quiz-item input { margin-right: 12px; accent-color: var(--accent-purple); width: 16px; height: 16px; }
-        
-        /* Hodnocení testu (Zelená/Červená se skleněným efektem) */
-        .quiz-correct { border-color: rgba(34, 197, 94, 0.5); box-shadow: 0 0 20px rgba(34, 197, 94, 0.15) inset; background: rgba(34, 197, 94, 0.05); }
-        .quiz-incorrect { border-color: rgba(239, 68, 68, 0.5); box-shadow: 0 0 20px rgba(239, 68, 68, 0.15) inset; background: rgba(239, 68, 68, 0.05); }
-        .quiz-results-card { background: linear-gradient(135deg, rgba(34, 197, 94, 0.8), rgba(21, 128, 61, 0.8)); color: white; padding: 20px; margin: 20px auto; max-width: 400px; font-size: 22px; font-weight: bold; border-radius: 16px; border: 1px solid rgba(255,255,255,0.3); }
-        
-        #loading { display: none; color: #d8b4fe; font-weight: bold; margin-top: 20px; letter-spacing: 1px; animation: pulse 1.5s infinite; }
-        @keyframes pulse { 0% { opacity: 0.6; } 50% { opacity: 1; text-shadow: 0 0 8px #9333ea; } 100% { opacity: 0.6; } }
-        
-        .controls { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; margin-top: 20px; }
+        /* QUIZ */
+        .quiz-item { text-align: left; padding: 25px; margin: 20px 0; }
+        .quiz-option { 
+            display: block; padding: 12px; margin: 8px 0; border-radius: 10px; 
+            background: rgba(255,255,255,0.03); border: 1px solid transparent; cursor: pointer;
+        }
+        .quiz-correct { border-color: #22c55e; background: rgba(34, 197, 94, 0.1); }
+        .quiz-incorrect { border-color: #ef4444; background: rgba(239, 68, 68, 0.1); }
+
+        #loading { display: none; margin: 20px; animation: pulse 1.5s infinite; color: #d8b4fe; }
+        @keyframes pulse { 50% { opacity: 0.5; } }
     </style>
 </head>
 <body>
@@ -110,32 +80,39 @@
         <div class="glass-panel header-box">
             <input type="file" id="fileInput" accept=".pdf,.txt">
             <button class="btn-purple" onclick="uploadFile()">Vygenerovat materiály</button>
-            <p id="loading">Gemma analyzuje text a tvoří 20 otázek. Prosím čekejte...</p>
+            <p id="loading">Gemma analyzuje text... Může to trvat až minutu.</p>
         </div>
 
-        <nav style="margin-bottom: 20px;">
-            <button onclick="showSection('flash')" class="nav-btn active glass-panel">Studijní Kartičky</button>
-            <button onclick="showSection('quiz')" class="nav-btn glass-panel">Testové Otázky</button>
+        <nav style="display: flex; gap: 10px; justify-content: center; margin-bottom: 20px;">
+            <button onclick="showSection('flash')" class="nav-btn active">Kartičky</button>
+            <button onclick="showSection('quiz')" class="nav-btn">Test</button>
         </nav>
 
-        <div id="flash" class="section" style="display:block">
-            <div id="flashBox" class="glass-panel card">
-                <span style="opacity: 0.5;">Nahrajte soubor nahoře pro vytvoření kartiček...</span>
+        <div id="flash" class="section">
+            <div class="card-container" onclick="toggleCard()" id="flashCard">
+                <div class="card-inner">
+                    <div class="glass-panel card-front">
+                        <span class="flash-label">Otázka</span>
+                        <div id="qText">Nahrajte soubor...</div>
+                    </div>
+                    <div class="glass-panel card-back">
+                        <span class="flash-label">Odpověď</span>
+                        <div id="aText">...</div>
+                    </div>
+                </div>
             </div>
-            <div class="controls">
-                <button onclick="prevCard()">Předchozí</button>
-                <button class="btn-yellow" onclick="toggleCard()">Otočit kartičku</button>
-                <button onclick="nextCard()">Další</button>
+            <div style="margin-top: 20px; display: flex; gap: 10px; justify-content: center;">
+                <button onclick="prevCard()">← Předchozí</button>
+                <button onclick="nextCard()">Další →</button>
             </div>
         </div>
 
         <div id="quiz" class="section" style="display:none">
-            <div id="quizResults" style="display:none"></div>
+            <div id="quizResults" style="display:none; padding: 20px; border-radius: 15px; margin-bottom: 20px; font-weight: bold;"></div>
             <div id="quizBox"></div>
-            
-            <div class="controls" style="margin-top:30px;">
-                <button onclick="gradeQuiz()" class="btn-purple" style="font-size:16px;">Vyhodnotit odpovědi</button>
-                <button onclick="resetQuiz()" class="btn-yellow" style="font-size:16px;">Obnovit test</button>
+            <div style="margin-top: 20px; display: flex; gap: 10px; justify-content: center;">
+                <button class="btn-purple" onclick="gradeQuiz()">Vyhodnotit</button>
+                <button class="btn-yellow" onclick="renderQuiz()">Resetovat</button>
             </div>
         </div>
     </div>
@@ -144,108 +121,88 @@
         const API_KEY = "sk-0MlocXvcIJNS9usp-OlaAg";
         let store = { flashcards: [], quiz: [] };
         let idx = 0;
-        let isAns = false;
 
         function showSection(id) {
             document.querySelectorAll('.section').forEach(s => s.style.display = 'none');
             document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
             document.getElementById(id).style.display = 'block';
-            event.target.classList.add('active');
+            event.currentTarget.classList.add('active');
         }
 
         async function uploadFile() {
             const file = document.getElementById('fileInput').files[0];
-            if(!file) return alert("Vyberte prosím soubor!");
+            if(!file) return alert("Vyberte soubor!");
+            
             document.getElementById('loading').style.display = "block";
             const fd = new FormData(); fd.append("file", file);
+            
             try {
-                const r = await fetch("/upload", { method: "POST", headers: {"x-api-key": API_KEY}, body: fd });
+                const r = await fetch("/upload", { 
+                    method: "POST", 
+                    headers: {"x-api-key": API_KEY}, 
+                    body: fd 
+                });
                 const res = await r.json();
-                const clean = res.result.replace(/```json/g, "").replace(/```/g, "").trim();
-                store = JSON.parse(clean);
+                if(res.error) throw new Error(res.error);
+                
+                store = JSON.parse(res.result);
                 idx = 0;
                 renderFlash();
                 renderQuiz();
-            } catch(e) { alert("Chyba AI. Zkuste to prosím znovu.\nDetail: " + e); }
-            finally { document.getElementById('loading').style.display = "none"; }
-        }
-
-        function renderFlash() {
-            const b = document.getElementById("flashBox");
-            if(store.flashcards && store.flashcards.length > 0) {
-                const item = store.flashcards[idx];
-                const label = isAns ? '<span class="flash-label">Odpověď</span>' : '<span class="flash-label">Otázka</span>';
-                b.innerHTML = `${label} <div>${isAns ? item.a : item.q}</div>`;
+            } catch(e) {
+                alert("Chyba: " + e.message);
+            } finally {
+                document.getElementById('loading').style.display = "none";
             }
         }
-        function toggleCard() { isAns = !isAns; renderFlash(); }
-        function nextCard() { if(idx < store.flashcards.length-1) { idx++; isAns=false; renderFlash(); } }
-        function prevCard() { if(idx > 0) { idx--; isAns=false; renderFlash(); } }
+
+        function toggleCard() { document.getElementById("flashCard").classList.toggle('flipped'); }
+
+        function renderFlash() {
+            if(!store.flashcards.length) return;
+            document.getElementById("flashCard").classList.remove('flipped');
+            setTimeout(() => {
+                document.getElementById("qText").innerText = store.flashcards[idx].q;
+                document.getElementById("aText").innerText = store.flashcards[idx].a;
+            }, 150);
+        }
+
+        function nextCard() { if(idx < store.flashcards.length-1) { idx++; renderFlash(); } }
+        function prevCard() { if(idx > 0) { idx--; renderFlash(); } }
 
         function renderQuiz() {
             const box = document.getElementById("quizBox");
             document.getElementById('quizResults').style.display = 'none';
-            if(store.quiz && store.quiz.length > 0) {
-                box.innerHTML = store.quiz.map((q, i) => `
-                    <div class="glass-panel quiz-item" id="q${i}">
-                        <p><b>${i+1}. ${q.q}</b></p>
-                        ${q.options.map(o => `
-                            <label class="quiz-option">
-                                <input type="radio" name="q${i}" value="${o}"> ${o}
-                            </label>
-                        `).join('')}
-                    </div>
-                `).join('');
-            }
+            box.innerHTML = store.quiz.map((q, i) => `
+                <div class="glass-panel quiz-item" id="q${i}">
+                    <p><b>${i+1}. ${q.q}</b></p>
+                    ${q.options.map(o => `
+                        <label class="quiz-option">
+                            <input type="radio" name="q${i}" value="${o}"> ${o}
+                        </label>
+                    `).join('')}
+                </div>
+            `).join('');
         }
 
         function gradeQuiz() {
-            if(!store.quiz || store.quiz.length === 0) return;
             let score = 0;
             store.quiz.forEach((q, i) => {
-                const checkedOption = document.querySelector(`input[name="q${i}"]:checked`);
-                const questionDiv = document.getElementById(`q${i}`);
+                const selected = document.querySelector(`input[name="q${i}"]:checked`);
+                const div = document.getElementById(`q${i}`);
+                div.classList.remove('quiz-correct', 'quiz-incorrect');
                 
-                if (checkedOption) {
-                    if (checkedOption.value === q.correct) {
-                        score++;
-                        questionDiv.classList.add('quiz-correct');
-                        questionDiv.classList.remove('quiz-incorrect');
-                    } else {
-                        questionDiv.classList.add('quiz-incorrect');
-                        questionDiv.classList.remove('quiz-correct');
-                    }
+                if(selected && selected.value === q.correct) {
+                    score++;
+                    div.classList.add('quiz-correct');
                 } else {
-                    questionDiv.classList.add('quiz-incorrect');
-                    questionDiv.classList.remove('quiz-correct');
+                    div.classList.add('quiz-incorrect');
                 }
             });
-            const resCard = document.getElementById('quizResults');
-            resCard.innerHTML = `Skóre: ${score} z ${store.quiz.length}`;
-            resCard.classList.add('quiz-results-card');
-            resCard.style.display = 'block';
-            resCard.scrollIntoView({ behavior: 'smooth' });
-        }
-
-        // NOVÁ FUNKCE PRO OBNOVENÍ TESTU
-        function resetQuiz() {
-            if(!store.quiz || store.quiz.length === 0) return;
-            
-            // Odznačí všechny radio buttony
-            document.querySelectorAll('.quiz-item input[type="radio"]').forEach(radio => {
-                radio.checked = false;
-            });
-            
-            // Odstraní zelené/červené zabarvení
-            document.querySelectorAll('.quiz-item').forEach(item => {
-                item.classList.remove('quiz-correct', 'quiz-incorrect');
-            });
-            
-            // Schová výsledkové skóre
-            document.getElementById('quizResults').style.display = 'none';
-            
-            // Odroluje zpět na začátek testu
-            document.getElementById('quizBox').scrollIntoView({ behavior: 'smooth' });
+            const res = document.getElementById('quizResults');
+            res.innerText = `Výsledek: ${score} z ${store.quiz.length}`;
+            res.style.display = 'block';
+            res.style.background = score > 5 ? 'rgba(34, 197, 94, 0.2)' : 'rgba(239, 68, 68, 0.2)';
         }
     </script>
 </body>
