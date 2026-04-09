@@ -7,12 +7,18 @@ from datetime import datetime
 
 app = Flask(__name__)
 
-# --- NASTAVENÍ DATABÁZE ---
-# Pokud DATABASE_URL neexistuje, použije se SQLite ve složce instance
-default_db = 'sqlite:///' + os.path.join(app.instance_path, 'project.db')
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get("DATABASE_URL", default_db)
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+# --- OPRAVA CESTY A PŘIPOJENÍ ---
+db_url = os.environ.get("DATABASE_URL")
 
+if db_url:
+    print(f"DEBUG: Připojuji se k PostgreSQL: {db_url}")
+    app.config['SQLALCHEMY_DATABASE_URI'] = db_url
+else:
+    # Pokud Postgres není, použijeme SQLite v /tmp/ (tam to vždycky projde)
+    print("DEBUG: DATABASE_URL nenalezena, používám nouzové SQLite v /tmp/")
+    app.config['SQLALCHEMY_DATABASE_URI'] = "sqlite:////tmp/maturita_emergency.db"
+
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
 # --- MODEL DATABÁZE ---
@@ -24,9 +30,13 @@ class UserSession(db.Model):
     total_questions = db.Column(db.Integer)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
-# Vytvoření tabulek
-with app.app_context():
-    db.create_all()
+# Vytvoření tabulek (s ošetřením chyb)
+try:
+    with app.app_context():
+        db.create_all()
+        print("DEBUG: Databáze úspěšně připravena.")
+except Exception as e:
+    print(f"CHYBA DATABÁZE: {e}")
 
 AUTH_KEY = os.environ.get("AUTH_KEY")
 OPENAI_BASE_URL = os.environ.get("OPENAI_BASE_URL", "https://kurim.ithope.eu/v1")
@@ -51,22 +61,19 @@ def upload():
         else:
             content = file_stream.decode("utf-8")
     except Exception as e:
-        return jsonify({"error": f"Chyba: {e}"}), 400
+        return jsonify({"error": str(e)}), 400
 
-    prompt = f"""Z textu vytvoř 10 kartiček a 10 testových otázek v JSONu.
-    Struktura:
-    {{
-      "flashcards": [{{"q": "otázka", "a": "odpověď"}}],
-      "quiz": [{{"q": "otázka", "options": ["A", "B", "C", "D"], "correct": "text_shoda"}}]
-    }}
-    Text: {content[:3500]}"""
+    prompt = f"Vytvoř 10 kartiček a 10 testových otázek z textu: {content[:3500]}"
 
     try:
         res = requests.post(
             f"{OPENAI_BASE_URL.rstrip('/')}/chat/completions",
             json={
                 "model": "gemma3:27b",
-                "messages": [{"role": "system", "content": "Jsi JSON generátor."}, {"role": "user", "content": prompt}],
+                "messages": [
+                    {"role": "system", "content": "Jsi JSON generátor."},
+                    {"role": "user", "content": prompt}
+                ],
                 "temperature": 0.1
             },
             headers={"Authorization": f"Bearer {AUTH_KEY}"},
@@ -76,20 +83,24 @@ def upload():
         clean_json = raw_content.replace("```json", "").replace("```", "").strip()
         return jsonify({"result": clean_json})
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"error": "AI fail"}), 500
 
 @app.route("/save_score", methods=["POST"])
 def save_score():
     data = request.json
-    new_record = UserSession(
-        ip_address=request.remote_addr,
-        filename=data.get('filename'),
-        score=data.get('score'),
-        total_questions=data.get('total')
-    )
-    db.session.add(new_record)
-    db.session.commit()
-    return jsonify({"status": "ok"})
+    try:
+        new_record = UserSession(
+            ip_address=request.remote_addr,
+            filename=data.get('filename'),
+            score=data.get('score'),
+            total_questions=data.get('total')
+        )
+        db.session.add(new_record)
+        db.session.commit()
+        return jsonify({"status": "ok"})
+    except Exception as e:
+        print(f"Chyba ukládání: {e}")
+        return jsonify({"status": "error"}), 500
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
