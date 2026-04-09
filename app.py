@@ -6,7 +6,7 @@ import io
 
 app = Flask(__name__)
 
-# Klíč ze screenshotu
+
 AUTH_KEY = "sk-0MlocXvcIJNS9usp-OlaAg"
 OPENAI_BASE_URL = os.environ.get("OPENAI_BASE_URL", "https://kurim.ithope.eu/v1")
 
