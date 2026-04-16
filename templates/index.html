@@ -1,250 +1,524 @@
 <!DOCTYPE html>
-<html lang="cs">
+<html lang="cs" data-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Maturitní Pomocník | AI</title>
     <style>
+        /* ===================== TÉMA ===================== */
         :root {
-            --glass-bg: rgba(255, 255, 255, 0.03);
-            --glass-border: rgba(255, 255, 255, 0.1);
-            --accent: #a855f7;
-            --accent-glow: rgba(168, 85, 247, 0.4);
+            --accent:       #a855f7;
+            --accent-glow:  rgba(168, 85, 247, 0.4);
         }
+
+        [data-theme="dark"] {
+            --bg:           #05020a;
+            --bg-grad:      rgba(120, 40, 200, 0.15);
+            --surface:      rgba(255,255,255,0.03);
+            --border:       rgba(255,255,255,0.10);
+            --text:         #f8fafc;
+            --text-muted:   #94a3b8;
+            --btn-bg:       rgba(255,255,255,0.05);
+            --btn-color:    #fff;
+            --card-back-bg: rgba(168,85,247,0.05);
+            --shadow:       rgba(0,0,0,0.5);
+            --quiz-bg:      rgba(255,255,255,0.01);
+            --modal-bg:     #0f0a1a;
+            --table-head:   rgba(168,85,247,0.15);
+            --table-row:    rgba(255,255,255,0.02);
+            --table-hover:  rgba(168,85,247,0.08);
+            --input-bg:     rgba(255,255,255,0.05);
+            --input-border: rgba(255,255,255,0.15);
+        }
+
+        [data-theme="light"] {
+            --bg:           #f1f0f7;
+            --bg-grad:      rgba(168, 85, 247, 0.08);
+            --surface:      rgba(255,255,255,0.85);
+            --border:       rgba(0,0,0,0.10);
+            --text:         #1e1333;
+            --text-muted:   #6b7280;
+            --btn-bg:       rgba(0,0,0,0.06);
+            --btn-color:    #1e1333;
+            --card-back-bg: rgba(168,85,247,0.08);
+            --shadow:       rgba(0,0,0,0.12);
+            --quiz-bg:      rgba(0,0,0,0.02);
+            --modal-bg:     #ffffff;
+            --table-head:   rgba(168,85,247,0.10);
+            --table-row:    rgba(0,0,0,0.02);
+            --table-hover:  rgba(168,85,247,0.06);
+            --input-bg:     rgba(0,0,0,0.04);
+            --input-border: rgba(0,0,0,0.15);
+        }
+
+        /* ===================== ZÁKLAD ===================== */
+        *, *::before, *::after { box-sizing: border-box; }
 
         body {
             margin: 0; padding: 20px;
             font-family: 'Segoe UI', system-ui, sans-serif;
-            background: #05020a; color: #f8fafc; text-align: center;
-            background-image: radial-gradient(circle at 10% 20%, rgba(120, 40, 200, 0.15), transparent 40%);
+            background: var(--bg);
+            background-image: radial-gradient(circle at 10% 20%, var(--bg-grad), transparent 40%);
+            color: var(--text);
+            text-align: center;
             min-height: 100vh;
+            transition: background 0.35s, color 0.35s;
         }
 
         .container { max-width: 800px; margin: 0 auto; }
 
-        .glass-panel {
-            background: var(--glass-bg); backdrop-filter: blur(15px);
-            border: 1px solid var(--glass-border); border-radius: 24px; padding: 25px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        /* ===================== HEADER ===================== */
+        .header-row {
+            display: flex; align-items: center; justify-content: center;
+            gap: 16px; flex-wrap: wrap; margin-bottom: 6px;
         }
 
-        /* 3D Kartičky */
+        /* ===================== THEME TOGGLE ===================== */
+        .theme-toggle {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 50px;
+            padding: 6px 14px;
+            cursor: pointer;
+            font-size: 1.1rem;
+            display: flex; align-items: center; gap: 8px;
+            color: var(--text);
+            transition: 0.3s;
+            user-select: none;
+        }
+        .theme-toggle:hover { background: var(--accent); color: #fff; border-color: transparent; }
+        .theme-label { font-size: 0.8rem; font-weight: 600; }
+
+        /* ===================== GLASS PANEL ===================== */
+        .glass-panel {
+            background: var(--surface);
+            backdrop-filter: blur(15px);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 25px;
+            box-shadow: 0 10px 30px var(--shadow);
+            transition: background 0.35s, border 0.35s;
+        }
+
+        /* ===================== PŘEZDÍVKA ===================== */
+        .prezdivka-row {
+            display: flex; gap: 10px; align-items: center;
+            justify-content: center; margin-bottom: 12px; flex-wrap: wrap;
+        }
+        .prezdivka-row label { color: var(--text-muted); font-size: 0.9rem; }
+        .prezdivka-row input[type="text"] {
+            background: var(--input-bg);
+            border: 1px solid var(--input-border);
+            border-radius: 10px; padding: 8px 14px;
+            color: var(--text); font-size: 0.95rem;
+            outline: none; transition: 0.3s;
+            width: 180px;
+        }
+        .prezdivka-row input[type="text"]:focus { border-color: var(--accent); }
+
+        /* ===================== FILE INPUT ===================== */
+        input[type="file"] {
+            margin: 10px 0; font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        /* ===================== BUTTONS ===================== */
+        button {
+            padding: 12px 28px; cursor: pointer;
+            background: var(--btn-bg); color: var(--btn-color);
+            border: 1px solid var(--border);
+            border-radius: 12px; transition: 0.3s; font-weight: 600;
+        }
+        button:hover { background: var(--accent); color: #fff; box-shadow: 0 0 15px var(--accent-glow); border-color: transparent; }
+        button:disabled { opacity: 0.5; cursor: not-allowed; }
+        .aktivni-tab { background: var(--accent) !important; color: #fff !important; }
+
+        /* ===================== 3D KARTIČKY ===================== */
         .card-container {
-            perspective: 1000px; margin: 25px auto;
-            width: 100%; max-width: 500px; height: 300px; cursor: pointer;
+            perspective: 1000px; margin: 20px auto;
+            width: 100%; max-width: 520px; height: 260px; cursor: pointer;
         }
         .card-inner {
             position: relative; width: 100%; height: 100%;
-            transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: transform 0.6s cubic-bezier(0.4,0,0.2,1);
             transform-style: preserve-3d;
         }
         .card-container.flipped .card-inner { transform: rotateY(180deg); }
         .card-front, .card-back {
-            position: absolute; width: 100%; height: 100%; backface-visibility: hidden;
+            position: absolute; width: 100%; height: 100%;
+            backface-visibility: hidden;
             display: flex; align-items: center; justify-content: center;
-            padding: 30px; box-sizing: border-box; border-radius: 24px;
-            font-size: 1.3rem; border: 1px solid var(--glass-border);
-            background: rgba(255,255,255,0.02);
+            padding: 30px; border-radius: 24px; font-size: 1.2rem;
+            border: 1px solid var(--border);
+            background: var(--surface);
         }
         .card-back {
             transform: rotateY(180deg);
-            background: rgba(168, 85, 247, 0.05);
-            border-color: var(--accent); color: #e9d5ff;
+            background: var(--card-back-bg);
+            border-color: var(--accent); color: #c084fc;
         }
 
-        button {
-            padding: 12px 28px; cursor: pointer;
-            background: rgba(255,255,255,0.05); color: white;
-            border: 1px solid var(--glass-border); border-radius: 12px;
-            transition: 0.3s; font-weight: 600;
-        }
-        button:hover { background: var(--accent); box-shadow: 0 0 15px var(--accent-glow); border-color: transparent; }
-        button:disabled { opacity: 0.5; cursor: not-allowed; }
-        .aktivni-tab { background: var(--accent) !important; }
-
-        input[type="file"] { margin: 15px 0; font-size: 14px; color: #94a3b8; }
-
+        /* ===================== QUIZ ===================== */
         .quiz-item {
             text-align: left; margin: 15px 0; padding: 20px;
-            border-radius: 18px; border: 1px solid var(--glass-border);
-            background: rgba(255,255,255,0.01);
+            border-radius: 18px; border: 1px solid var(--border);
+            background: var(--quiz-bg); transition: 0.3s;
         }
-        .quiz-spravne { border-color: #22c55e; background: rgba(34,197,94,0.05); }
-        .quiz-spatne { border-color: #ef4444; background: rgba(239,68,68,0.05); }
+        .quiz-spravne { border-color: #22c55e !important; background: rgba(34,197,94,0.08) !important; }
+        .quiz-spatne  { border-color: #ef4444 !important; background: rgba(239,68,68,0.08) !important; }
 
+        /* ===================== PROGRESS BAR ===================== */
+        .progress-wrap { background: var(--border); border-radius: 99px; height: 6px; margin: 8px auto; max-width: 300px; }
+        .progress-fill { background: var(--accent); height: 100%; border-radius: 99px; transition: width 0.4s; }
+
+        /* ===================== LOADER ===================== */
         #nacitani { display: none; color: var(--accent); font-weight: bold; margin: 15px; animation: dychani 2s infinite; }
-        @keyframes dychani { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+        @keyframes dychani { 0%,100%{opacity:1} 50%{opacity:0.3} }
 
         .chyba-zprava {
             color: #f87171; background: rgba(239,68,68,0.1);
             border: 1px solid rgba(239,68,68,0.3);
-            border-radius: 12px; padding: 15px; margin: 10px 0;
-            display: none;
+            border-radius: 12px; padding: 15px; margin: 10px 0; display: none;
         }
 
-        .pocitadlo {
-            color: #94a3b8; font-size: 0.9rem; margin: 5px 0;
+        .pocitadlo { color: var(--text-muted); font-size: 0.9rem; margin: 5px 0; }
+
+        /* ===================== MODAL STATISTIKY ===================== */
+        .modal-overlay {
+            display: none; position: fixed; inset: 0;
+            background: rgba(0,0,0,0.6); backdrop-filter: blur(4px);
+            z-index: 1000; align-items: center; justify-content: center;
         }
+        .modal-overlay.otevreny { display: flex; }
+        .modal-box {
+            background: var(--modal-bg);
+            border: 1px solid var(--border);
+            border-radius: 24px; padding: 30px;
+            max-width: 700px; width: 95%;
+            max-height: 80vh; overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+            text-align: left;
+        }
+        .modal-box h2 { margin-top: 0; font-size: 1.4rem; color: var(--text); }
+
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 0.9rem; }
+        thead tr { background: var(--table-head); }
+        th { padding: 10px 12px; text-align: left; color: var(--accent); font-weight: 700; }
+        td { padding: 10px 12px; border-bottom: 1px solid var(--border); color: var(--text); }
+        tbody tr { background: var(--table-row); transition: background 0.2s; }
+        tbody tr:hover { background: var(--table-hover); }
+
+        .skore-badge {
+            display: inline-block; padding: 2px 10px;
+            border-radius: 99px; font-weight: 700; font-size: 0.85rem;
+        }
+        .skore-vysoke { background: rgba(34,197,94,0.15); color: #22c55e; }
+        .skore-stredni { background: rgba(251,191,36,0.15); color: #f59e0b; }
+        .skore-nizke { background: rgba(239,68,68,0.15); color: #ef4444; }
+
+        .modal-close {
+            float: right; background: none; border: none;
+            font-size: 1.5rem; cursor: pointer; color: var(--text-muted);
+            padding: 0; line-height: 1;
+        }
+        .modal-close:hover { color: var(--accent); background: none; box-shadow: none; }
+
+        .prazdne-statistiky { text-align: center; color: var(--text-muted); padding: 30px; }
+
+        /* ===================== VÝSLEDEK TESTU ===================== */
+        .vysledek-panel {
+            display: none; margin-top: 15px; padding: 20px;
+            border-radius: 18px; background: var(--surface);
+            border: 1px solid var(--border);
+        }
+        .vysledek-cislo { font-size: 2.5rem; font-weight: 800; color: var(--accent); }
+
+        /* ===================== TABS ===================== */
+        .tabs-row { margin: 25px 0; display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
     </style>
 </head>
 <body>
 <div class="container">
-    <h1 style="font-weight: 800; font-size: 2.5rem; letter-spacing: -1px; margin-bottom: 5px;">
-        Maturitní Pomocník
-    </h1>
-    <p style="color: #94a3b8; margin-bottom: 30px;">Uč se efektivně s pomocí umělé inteligence.</p>
 
+    <!-- HEADER -->
+    <div class="header-row">
+        <h1 style="font-weight:800;font-size:2.3rem;letter-spacing:-1px;margin:0">
+            🎓 Maturitní Pomocník
+        </h1>
+        <!-- THEME TOGGLE -->
+        <button class="theme-toggle" onclick="prepnoutTheme()" id="btnTheme" title="Přepnout téma">
+            <span id="themeIkona">☀️</span>
+            <span class="theme-label" id="themeText">Světlý</span>
+        </button>
+    </div>
+    <p style="color:var(--text-muted);margin-bottom:30px">Uč se efektivně s pomocí umělé inteligence.</p>
+
+    <!-- UPLOAD PANEL -->
     <div class="glass-panel">
+        <!-- Přezdívka -->
+        <div class="prezdivka-row">
+            <label for="vstupPrezdivka">👤 Tvoje jméno:</label>
+            <input type="text" id="vstupPrezdivka" placeholder="Anonym" maxlength="80">
+        </div>
+
         <input type="file" id="vstupSoubor" accept=".pdf,.txt">
         <br>
-        <button id="tlacitkoGenerovat" onclick="nahratSoubor()">Generovat materiály</button>
-        <div id="nacitani">Gemma analyzuje text...</div>
+        <button id="tlacitkoGenerovat" onclick="nahratSoubor()">⚡ Generovat materiály</button>
+        <div id="nacitani">🤖 Gemma analyzuje text...</div>
         <div id="chybaZprava" class="chyba-zprava"></div>
     </div>
 
-    <div style="margin: 25px 0; display: flex; gap: 10px; justify-content: center;">
-        <button id="btn-karticky" class="aktivni-tab" onclick="prepnoutTab('karticky')">Kartičky</button>
-        <button id="btn-test" onclick="prepnoutTab('test')">Testy</button>
+    <!-- TABS -->
+    <div class="tabs-row">
+        <button id="btn-karticky" class="aktivni-tab" onclick="prepnoutTab('karticky')">🃏 Kartičky</button>
+        <button id="btn-test"     onclick="prepnoutTab('test')">📝 Testy</button>
+        <button onclick="otevritStatistiky()">📊 Statistiky</button>
     </div>
 
+    <!-- KARTIČKY -->
     <div id="karticky" class="tab-obsah">
         <div class="pocitadlo" id="pocitadloKarticek">Nahraj soubor pro zobrazení kartiček</div>
+        <div class="progress-wrap"><div class="progress-fill" id="progressKarticky" style="width:0%"></div></div>
+
         <div class="card-container" onclick="this.classList.toggle('flipped')" id="kartickaPrvek">
             <div class="card-inner">
                 <div class="card-front"><div id="textOtazky">Zde se objeví otázka...</div></div>
                 <div class="card-back"><div id="textOdpovedi">...a zde odpověď.</div></div>
             </div>
         </div>
-        <div style="margin-top: 20px;">
-            <button onclick="predchoziKartička()">←</button>
-            <button onclick="dalsiKartička()">→</button>
+        <div style="margin-top:16px;display:flex;gap:10px;justify-content:center">
+            <button onclick="predchoziKartička()">← Předchozí</button>
+            <button onclick="dalsiKartička()">Další →</button>
         </div>
     </div>
 
+    <!-- TEST -->
     <div id="test" class="tab-obsah" style="display:none">
         <div id="testBox"></div>
-        <button onclick="vyhodnotitTest()" style="width: 100%; margin-top: 15px;">Vyhodnotit test</button>
+        <button onclick="vyhodnotitTest()" style="width:100%;margin-top:15px">✅ Vyhodnotit test</button>
+        <div class="vysledek-panel" id="vysledekPanel">
+            <div class="vysledek-cislo" id="vysledekCislo">—</div>
+            <div style="color:var(--text-muted);margin-top:4px" id="vysledekText"></div>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL STATISTIKY -->
+<div class="modal-overlay" id="modalStatistiky">
+    <div class="modal-box">
+        <button class="modal-close" onclick="zavritStatistiky()">✕</button>
+        <h2>📊 Statistiky — výsledky testů</h2>
+        <div id="obsahStatistik"><p class="prazdne-statistiky">Načítám...</p></div>
     </div>
 </div>
 
 <script>
-    let uloziste = { flashcards: [], quiz: [] };
-    let indexKarticky = 0;
-    let nazevSouboru = "";
+/* ==================== TÉMA ==================== */
+function prepnoutTheme() {
+    const html = document.documentElement;
+    const noveTema = html.dataset.theme === 'dark' ? 'light' : 'dark';
+    html.dataset.theme = noveTema;
+    localStorage.setItem('tema', noveTema);
+    aktualizovatThemeBtn(noveTema);
+}
 
-    function prepnoutTab(tab) {
-        document.querySelectorAll('.tab-obsah').forEach(c => c.style.display = 'none');
-        document.querySelectorAll('button[id^="btn-"]').forEach(b => b.classList.remove('aktivni-tab'));
-        document.getElementById(tab).style.display = 'block';
-        document.getElementById('btn-' + tab).classList.add('aktivni-tab');
+function aktualizovatThemeBtn(tema) {
+    document.getElementById('themeIkona').textContent = tema === 'dark' ? '☀️' : '🌙';
+    document.getElementById('themeText').textContent  = tema === 'dark' ? 'Světlý' : 'Tmavý';
+}
+
+// Načti uložené téma při startu
+(function() {
+    const ulozene = localStorage.getItem('tema') || 'dark';
+    document.documentElement.dataset.theme = ulozene;
+    aktualizovatThemeBtn(ulozene);
+})();
+
+/* ==================== STAV ==================== */
+let uloziste    = { flashcards: [], quiz: [] };
+let indexKarticky = 0;
+let nazevSouboru  = "";
+
+/* ==================== TABS ==================== */
+function prepnoutTab(tab) {
+    document.querySelectorAll('.tab-obsah').forEach(c => c.style.display = 'none');
+    document.querySelectorAll('button[id^="btn-"]').forEach(b => b.classList.remove('aktivni-tab'));
+    document.getElementById(tab).style.display = 'block';
+    document.getElementById('btn-' + tab).classList.add('aktivni-tab');
+}
+
+/* ==================== CHYBY ==================== */
+function zobrazitChybu(zprava) {
+    const el = document.getElementById('chybaZprava');
+    el.textContent = '⚠️ ' + zprava;
+    el.style.display = 'block';
+}
+function skrytChybu() { document.getElementById('chybaZprava').style.display = 'none'; }
+
+/* ==================== UPLOAD ==================== */
+async function nahratSoubor() {
+    const soubor   = document.getElementById('vstupSoubor').files[0];
+    if (!soubor) return alert("Vyberte soubor!");
+
+    nazevSouboru = soubor.name;
+    const nacitani = document.getElementById('nacitani');
+    const tlacitko = document.getElementById('tlacitkoGenerovat');
+
+    nacitani.style.display = "block";
+    tlacitko.disabled = true;
+    skrytChybu();
+
+    const fd = new FormData();
+    fd.append("file", soubor);
+
+    try {
+        const odpoved = await fetch("/upload", { method: "POST", body: fd });
+        const data    = await odpoved.json();
+
+        if (data.error) throw new Error(data.error);
+
+        let parsovano;
+        try { parsovano = JSON.parse(data.result); }
+        catch { throw new Error("AI vrátila neplatná data. Zkus to znovu."); }
+
+        if (!parsovano.flashcards || !parsovano.quiz)
+            throw new Error("Neplatný formát odpovědi od AI.");
+
+        uloziste      = parsovano;
+        indexKarticky = 0;
+        zobrazitKarticky();
+        zobrazitTest();
+        prepnoutTab('karticky');
+
+    } catch(e) {
+        zobrazitChybu(e.message || "Neznámá chyba při generování materiálu.");
+        console.error(e);
+    } finally {
+        nacitani.style.display = "none";
+        tlacitko.disabled = false;
     }
+}
 
-    function zobrazitChybu(zprava) {
-        const el = document.getElementById('chybaZprava');
-        el.textContent = '⚠️ ' + zprava;
-        el.style.display = 'block';
-    }
+/* ==================== KARTIČKY ==================== */
+function zobrazitKarticky() {
+    if (!uloziste.flashcards.length) return;
+    const k   = uloziste.flashcards[indexKarticky];
+    const cel = uloziste.flashcards.length;
 
-    function skrytChybu() {
-        document.getElementById('chybaZprava').style.display = 'none';
-    }
+    document.getElementById('textOtazky').innerText  = k.q;
+    document.getElementById('textOdpovedi').innerText = k.a;
+    document.getElementById('kartickaPrvek').classList.remove('flipped');
+    document.getElementById('pocitadloKarticek').textContent =
+        `Kartička ${indexKarticky + 1} z ${cel} — klikni pro otočení`;
+    document.getElementById('progressKarticky').style.width =
+        `${((indexKarticky + 1) / cel) * 100}%`;
+}
 
-    async function nahratSoubor() {
-        const soubor = document.getElementById('vstupSoubor').files[0];
-        if (!soubor) return alert("Vyberte soubor!");
+function dalsiKartička()     { if (indexKarticky < uloziste.flashcards.length - 1) { indexKarticky++; zobrazitKarticky(); } }
+function predchoziKartička() { if (indexKarticky > 0) { indexKarticky--; zobrazitKarticky(); } }
 
-        nazevSouboru = soubor.name;
-        const nacitani = document.getElementById('nacitani');
-        const tlacitko = document.getElementById('tlacitkoGenerovat');
+// Ovládání šipkami na klávesnici
+document.addEventListener('keydown', e => {
+    if (document.getElementById('karticky').style.display === 'none') return;
+    if (e.key === 'ArrowRight') dalsiKartička();
+    if (e.key === 'ArrowLeft')  predchoziKartička();
+    if (e.key === ' ')          document.getElementById('kartickaPrvek').classList.toggle('flipped');
+});
 
-        nacitani.style.display = "block";
-        tlacitko.disabled = true;
-        skrytChybu();
+/* ==================== TEST ==================== */
+function zobrazitTest() {
+    document.getElementById("testBox").innerHTML = uloziste.quiz.map((q, i) => `
+        <div class="quiz-item" id="q${i}">
+            <p style="margin-top:0"><b>${i + 1}. ${q.q}</b></p>
+            ${q.options.map(o => `
+                <label style="display:block;margin:10px 0;cursor:pointer">
+                    <input type="radio" name="q${i}" value="${o}"> ${o}
+                </label>
+            `).join('')}
+        </div>
+    `).join('');
+    document.getElementById('vysledekPanel').style.display = 'none';
+}
 
-        const fd = new FormData();
-        fd.append("file", soubor);
-
-        try {
-            const odpoved = await fetch("/upload", { method: "POST", body: fd });
-            const data = await odpoved.json();
-
-            if (data.error) throw new Error(data.error);
-
-            let parsovano;
-            try {
-                parsovano = JSON.parse(data.result);
-            } catch (e) {
-                throw new Error("AI vrátila neplatná data. Zkus to znovu.");
-            }
-
-            if (!parsovano.flashcards || !parsovano.quiz) {
-                throw new Error("Neplatný formát odpovědi od AI.");
-            }
-
-            uloziste = parsovano;
-            indexKarticky = 0;
-            zobrazitKarticky();
-            zobrazitTest();
-            prepnoutTab('karticky');
-
-        } catch (e) {
-            zobrazitChybu(e.message || "Neznámá chyba při generování materiálu.");
-            console.error(e);
-        } finally {
-            nacitani.style.display = "none";
-            tlacitko.disabled = false;
+function vyhodnotitTest() {
+    let skore = 0;
+    uloziste.quiz.forEach((q, i) => {
+        const vybrano = document.querySelector(`input[name="q${i}"]:checked`);
+        const div     = document.getElementById(`q${i}`);
+        if (vybrano && vybrano.value === q.correct) {
+            skore++;
+            div.className = 'quiz-item quiz-spravne';
+        } else {
+            div.className = 'quiz-item quiz-spatne';
         }
-    }
+    });
 
-    function zobrazitKarticky() {
-        if (!uloziste.flashcards.length) return;
-        const k = uloziste.flashcards[indexKarticky];
-        document.getElementById('textOtazky').innerText = k.q;
-        document.getElementById('textOdpovedi').innerText = k.a;
-        document.getElementById('kartickaPrvek').classList.remove('flipped');
-        document.getElementById('pocitadloKarticek').textContent =
-            `Kartička ${indexKarticky + 1} z ${uloziste.flashcards.length} — klikni pro otočení`;
-    }
+    const cel     = uloziste.quiz.length;
+    const procent = Math.round((skore / cel) * 100);
+    const panel   = document.getElementById('vysledekPanel');
+    panel.style.display = 'block';
+    document.getElementById('vysledekCislo').textContent = `${skore} / ${cel}`;
+    document.getElementById('vysledekText').textContent  =
+        procent >= 80 ? `🎉 Výborně! ${procent} %` :
+        procent >= 50 ? `👍 Dobře! ${procent} %` :
+                        `💪 Zkus to znovu. ${procent} %`;
 
-    function dalsiKartička() {
-        if (indexKarticky < uloziste.flashcards.length - 1) { indexKarticky++; zobrazitKarticky(); }
-    }
-    function predchoziKartička() {
-        if (indexKarticky > 0) { indexKarticky--; zobrazitKarticky(); }
-    }
+    // Ulož do databáze včetně přezdívky
+    const prezdivka = document.getElementById('vstupPrezdivka').value.trim() || 'Anonym';
+    fetch('/save_score', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ filename: nazevSouboru, score: skore, total: cel, prezdivka })
+    });
+}
 
-    function zobrazitTest() {
-        document.getElementById("testBox").innerHTML = uloziste.quiz.map((q, i) => `
-            <div class="quiz-item" id="q${i}">
-                <p style="margin-top:0"><b>${i + 1}. ${q.q}</b></p>
-                ${q.options.map(o => `
-                    <label style="display:block; margin: 10px 0; cursor:pointer">
-                        <input type="radio" name="q${i}" value="${o}"> ${o}
-                    </label>
-                `).join('')}
-            </div>
-        `).join('');
-    }
+/* ==================== STATISTIKY ==================== */
+async function otevritStatistiky() {
+    document.getElementById('modalStatistiky').classList.add('otevreny');
+    document.getElementById('obsahStatistik').innerHTML = '<p class="prazdne-statistiky">Načítám...</p>';
 
-    function vyhodnotitTest() {
-        let skore = 0;
-        uloziste.quiz.forEach((q, i) => {
-            const vybrano = document.querySelector(`input[name="q${i}"]:checked`);
-            const div = document.getElementById(`q${i}`);
-            if (vybrano && vybrano.value === q.correct) {
-                skore++;
-                div.className = 'quiz-item quiz-spravne';
-            } else {
-                div.className = 'quiz-item quiz-spatne';
-            }
-        });
-        alert(`Tvé skóre: ${skore} z ${uloziste.quiz.length} 🎉`);
-        fetch('/save_score', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ filename: nazevSouboru, score: skore, total: uloziste.quiz.length })
-        });
+    try {
+        const r    = await fetch('/statistiky');
+        const data = await r.json();
+
+        if (!data.length) {
+            document.getElementById('obsahStatistik').innerHTML =
+                '<p class="prazdne-statistiky">Zatím žádné výsledky. Dokonči první test! 🎯</p>';
+            return;
+        }
+
+        const radky = data.map(z => {
+            const procent = Math.round((z.skore / z.celkem) * 100);
+            const trida   = procent >= 80 ? 'skore-vysoke' : procent >= 50 ? 'skore-stredni' : 'skore-nizke';
+            return `<tr>
+                <td><b>${z.prezdivka}</b></td>
+                <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${z.soubor}">${z.soubor}</td>
+                <td><span class="skore-badge ${trida}">${z.skore}/${z.celkem} (${procent} %)</span></td>
+                <td style="color:var(--text-muted);font-size:0.85rem">${z.datum}</td>
+            </tr>`;
+        }).join('');
+
+        document.getElementById('obsahStatistik').innerHTML = `
+            <table>
+                <thead><tr>
+                    <th>👤 Jméno</th><th>📄 Soubor</th><th>🏆 Skóre</th><th>🕐 Datum</th>
+                </tr></thead>
+                <tbody>${radky}</tbody>
+            </table>`;
+    } catch(e) {
+        document.getElementById('obsahStatistik').innerHTML =
+            '<p class="prazdne-statistiky">Chyba při načítání statistik.</p>';
     }
+}
+
+function zavritStatistiky() {
+    document.getElementById('modalStatistiky').classList.remove('otevreny');
+}
+
+// Zavřít modal kliknutím mimo
+document.getElementById('modalStatistiky').addEventListener('click', function(e) {
+    if (e.target === this) zavritStatistiky();
+});
 </script>
 </body>
 </html>
