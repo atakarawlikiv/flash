@@ -18,11 +18,12 @@ db = SQLAlchemy(app)
 
 class UzivatelskaSezeni(db.Model):
     __tablename__ = "uzivatelska_sezeni"
-    id = db.Column(db.Integer, primary_key=True)
+    id          = db.Column(db.Integer, primary_key=True)
+    prezdivka   = db.Column(db.String(80), default="Anonym")   # NOVÉ: přezdívka uživatele
     nazev_souboru = db.Column(db.String(255))
-    skore = db.Column(db.Integer)
+    skore       = db.Column(db.Integer)
     celkem_otazek = db.Column(db.Integer)
-    vytvoreno = db.Column(db.DateTime, default=datetime.utcnow)
+    vytvoreno   = db.Column(db.DateTime, default=datetime.utcnow)
 
 # Počkej na databázi (PostgreSQL startuje pomaleji)
 def cekej_na_db():
@@ -41,7 +42,7 @@ cekej_na_db()
 
 # Konfigurace AI
 AUTH_KEY = os.environ.get("OPENAI_API_KEY", "")
-BASE_URL = os.environ.get("OPENAI_BASE_URL", "https://kurim.ithope.eu/v1").rstrip("/")
+BASE_URL  = os.environ.get("OPENAI_BASE_URL", "https://kurim.ithope.eu/v1").rstrip("/")
 
 @app.route("/")
 def index():
@@ -60,7 +61,6 @@ def nahrat():
         obsah = ""
         bajty = soubor.read()
 
-        # Čtení PDF nebo TXT
         if soubor.filename.lower().endswith(".pdf"):
             doc = fitz.open(stream=bajty, filetype="pdf")
             for stranka in doc:
@@ -72,61 +72,44 @@ def nahrat():
         if not obsah.strip():
             return jsonify({"error": "Soubor je prázdný nebo nečitelný"}), 400
 
-        # Zkrácení textu aby se vešel do kontextu
-        obsah_zkraceny = obsah[:4000]
+        obsah_zkraceny = obsah[:2000]
 
         prompt = (
-            "Vytvoř 10 kartiček (flashcards) a 10 testových otázek (quiz) z následujícího textu. "
-            "Odpověz POUZE čistým JSON objektem v tomto formátu (bez markdownu, bez vysvětlení):\n"
-            "{\n"
-            '  "flashcards": [\n'
-            '    {"q": "otázka", "a": "odpověď"}\n'
-            "  ],\n"
-            '  "quiz": [\n'
-            '    {"q": "otázka", "options": ["A) ...", "B) ...", "C) ...", "D) ..."], "correct": "A) ..."}\n'
-            "  ]\n"
-            "}\n\n"
-            f"Text:\n{obsah_zkraceny}"
+            "Z textu níže vytvoř PŘESNĚ 5 kartiček a 5 testových otázek.\n"
+            "Vrať POUZE tento JSON, nic jiného:\n"
+            '{"flashcards":[{"q":"...","a":"..."}],'
+            '"quiz":[{"q":"...","options":["A) ...","B) ...","C) ...","D) ..."],"correct":"A) ..."}]}\n\n'
+            f"Text: {obsah_zkraceny}"
         )
+
+        print(f"Odesílám požadavek na AI... ({len(obsah_zkraceny)} znaků)")
 
         odpoved = requests.post(
             f"{BASE_URL}/chat/completions",
             json={
                 "model": "gemma3:27b",
                 "messages": [
-                    {
-                        "role": "system",
-                        "content": (
-                            "Jsi stroj na generování JSON dat pro vzdělávací aplikaci. "
-                            "Odpovídej VÝHRADNĚ čistým JSON objektem. "
-                            "Žádný markdown, žádné vysvětlení, žádné ```json bloky. "
-                            "Pouze surový JSON."
-                        ),
-                    },
-                    {"role": "user", "content": prompt},
+                    {"role": "system", "content": "Jsi JSON generátor. Odpovídej POUZE surowym JSON objektem bez markdownu."},
+                    {"role": "user",   "content": prompt},
                 ],
                 "temperature": 0.1,
+                "max_tokens": 2000,
             },
-            headers={
-                "Authorization": f"Bearer {AUTH_KEY}",
-                "Content-Type": "application/json",
-            },
-            timeout=120,
+            headers={"Authorization": f"Bearer {AUTH_KEY}", "Content-Type": "application/json"},
+            timeout=180,
             verify=False,
         )
 
+        print(f"AI odpověděla se stavem: {odpoved.status_code}")
         odpoved.raise_for_status()
+
         raw = odpoved.json()["choices"][0]["message"]["content"]
-
-        # Vyčisti JSON od případných markdown bloků
         raw = re.sub(r"```json\s*", "", raw)
-        raw = re.sub(r"```\s*", "", raw)
-        raw = raw.strip()
+        raw = re.sub(r"```\s*",     "", raw).strip()
 
-        # Najdi JSON objekt
         nalezeno = re.search(r"\{.*\}", raw, re.DOTALL)
         if not nalezeno:
-            print(f"AI vrátila neplatný formát: {raw[:500]}")
+            print(f"AI vrátila neplatný formát: {raw[:300]}")
             return jsonify({"error": "AI vrátila neplatný formát dat"}), 500
 
         return jsonify({"result": nalezeno.group()})
@@ -146,9 +129,10 @@ def ulozit_skore():
     data = request.json
     try:
         zaznam = UzivatelskaSezeni(
-            nazev_souboru=data.get("filename"),
-            skore=data.get("score"),
-            celkem_otazek=data.get("total"),
+            prezdivka     = data.get("prezdivka", "Anonym")[:80],
+            nazev_souboru = data.get("filename"),
+            skore         = data.get("score"),
+            celkem_otazek = data.get("total"),
         )
         db.session.add(zaznam)
         db.session.commit()
@@ -160,13 +144,14 @@ def ulozit_skore():
 
 @app.route("/statistiky")
 def statistiky():
-    zaznamy = UzivatelskaSezeni.query.order_by(UzivatelskaSezeni.vytvoreno.desc()).limit(20).all()
+    zaznamy = UzivatelskaSezeni.query.order_by(UzivatelskaSezeni.vytvoreno.desc()).limit(50).all()
     vysledky = [
         {
-            "soubor": z.nazev_souboru,
-            "skore": z.skore,
-            "celkem": z.celkem_otazek,
-            "datum": z.vytvoreno.strftime("%d.%m.%Y %H:%M"),
+            "prezdivka": z.prezdivka,
+            "soubor":    z.nazev_souboru,
+            "skore":     z.skore,
+            "celkem":    z.celkem_otazek,
+            "datum":     z.vytvoreno.strftime("%d.%m.%Y %H:%M"),
         }
         for z in zaznamy
     ]
