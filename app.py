@@ -9,10 +9,10 @@ from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 from sqlalchemy import text
 
-app = Flask(__name__)
+app = Flask(__name__, instance_path="/tmp")
 
 # DB
-db_url = os.environ.get("DATABASE_URL") or "sqlite:///maturita.db"
+db_url = os.environ.get("DATABASE_URL") or "sqlite:////tmp/maturita.db"
 app.config['SQLALCHEMY_DATABASE_URI'] = db_url
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
