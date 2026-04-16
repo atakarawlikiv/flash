@@ -371,6 +371,9 @@ async function nahratSoubor() {
     const fd = new FormData();
     fd.append("file", soubor);
 
+    const prezdivka = document.getElementById('vstupPrezdivka').value.trim() || 'Anonym';
+    fd.append("prezdivka", prezdivka);
+
     try {
         const odpoved = await fetch("/upload", { method: "POST", body: fd });
         const data    = await odpoved.json();
