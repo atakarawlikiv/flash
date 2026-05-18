@@ -68,9 +68,9 @@ oprav_db()
 # ================= POMOCNÉ FUNKCE =================
 
 def fix(arr, typ):
-    if len(arr) > 15:
-        return arr[:15]
-    while len(arr) < 15:
+    if len(arr) > 10:
+        return arr[:10]
+    while len(arr) < 10:
         if typ == "f":
             arr.append({"q": "Doplň otázku", "a": "Doplň odpověď"})
         else:
@@ -84,15 +84,11 @@ def fix(arr, typ):
 
 def volej_ai(job_id: str, obsah: str, prezdivka: str, nazev_souboru: str):
     """Běží v samostatném vlákně — nginx timeout nás nezabije."""
-    prompt = f"""Vytvoř PŘESNĚ 15 flashcards a PŘESNĚ 15 testových otázek.
-Vrať POUZE validní JSON, žádný jiný text:
-{{
- "flashcards":[{{"q":"...","a":"..."}}],
- "quiz":[{{"q":"...","options":["A) ...","B) ...","C) ...","D) ..."],"correct":"A) ..."}}]
-}}
-
-Text:
-{obsah}"""
+    # Kratší text = rychlejší odpověď od Gemmy
+    obsah_kratky = obsah[:1500]
+    prompt = f"""Ze zadaného textu vytvoř 10 flashcards a 10 testových otázek. Vrať POUZE JSON:
+{{"flashcards":[{{"q":"...","a":"..."}}],"quiz":[{{"q":"...","options":["A)...","B)...","C)...","D)..."],"correct":"A)..."}}]}}
+Text: {obsah_kratky}"""
 
     try:
         r = requests.post(
@@ -100,11 +96,11 @@ Text:
             json={
                 "model": "gemma3:27b",
                 "messages": [
-                    {"role": "system", "content": "Vracíš POUZE JSON bez jakéhokoliv dalšího textu."},
+                    {"role": "system", "content": "Jsi asistent. Odpovídáš POUZE validním JSON."},
                     {"role": "user", "content": prompt}
                 ],
-                "temperature": 0.2,
-                "max_tokens": 3000,
+                "temperature": 0.1,
+                "max_tokens": 2000,
             },
             headers={"Authorization": f"Bearer {AUTH_KEY}"},
             timeout=300,
@@ -201,7 +197,7 @@ def nahrat():
         if not obsah.strip():
             return jsonify({"error": "Prázdný soubor"}), 400
 
-        obsah = obsah[:4000]
+        obsah = obsah[:1500]
 
     except Exception as e:
         return jsonify({"error": f"Chyba při čtení souboru: {e}"}), 500
