@@ -9,4 +9,6 @@ COPY . .
 
 EXPOSE 8000
 
-CMD ["gunicorn", "--bind", "0.0.0.0:8000", "--workers", "2", "--timeout", "200", "app:app"]
+ENV HOME=/tmp
+
+CMD ["gunicorn", "--bind", "0.0.0.0:8000", "--workers", "2", "--timeout", "200", "--worker-tmp-dir", "/tmp", "app:app"]
