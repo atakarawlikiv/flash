@@ -4,10 +4,13 @@ import requests
 import fitz
 import re
 import json
+import urllib3
 from flask import Flask, request, render_template, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 from sqlalchemy import text
+
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 app = Flask(__name__, instance_path="/tmp")
 
@@ -108,32 +111,51 @@ Text:
 {obsah}
 """
 
-        r = requests.post(
-            f"{BASE_URL}/chat/completions",
-            json={
-                "model": "gemma3:27b",
-                "messages": [
-                    {"role": "system", "content": "Vracíš pouze JSON."},
-                    {"role": "user", "content": prompt}
-                ],
-                "temperature": 0.2,
-                "max_tokens": 3000,
-            },
-            headers={"Authorization": f"Bearer {AUTH_KEY}"},
-            timeout=180,
-            verify=False,
-        )
+        try:
+            r = requests.post(
+                f"{BASE_URL}/chat/completions",
+                json={
+                    "model": "gemma3:27b",
+                    "messages": [
+                        {"role": "system", "content": "Vracíš pouze JSON."},
+                        {"role": "user", "content": prompt}
+                    ],
+                    "temperature": 0.2,
+                    "max_tokens": 3000,
+                },
+                headers={"Authorization": f"Bearer {AUTH_KEY}"},
+                timeout=180,
+                verify=False,
+            )
+            r.raise_for_status()
+        except requests.exceptions.ConnectionError as e:
+            print("AI CONNECTION ERROR:", e)
+            return jsonify({"error": f"Nelze se připojit k AI serveru ({BASE_URL}). Zkontroluj OPENAI_BASE_URL."}), 503
+        except requests.exceptions.Timeout:
+            return jsonify({"error": "AI server neodpověděl včas (timeout 180s). Zkus to znovu."}), 504
+        except requests.exceptions.HTTPError as e:
+            print("AI HTTP ERROR:", e, r.text[:300] if r else "")
+            return jsonify({"error": f"AI server vrátil chybu: {r.status_code}. {r.text[:200]}"}), 502
 
-        r.raise_for_status()
-        raw = r.json()["choices"][0]["message"]["content"]
+        try:
+            raw = r.json()["choices"][0]["message"]["content"]
+        except (KeyError, IndexError, ValueError) as e:
+            print("AI PARSE ERROR:", e, r.text[:300])
+            return jsonify({"error": "AI vrátila neočekávaný formát odpovědi."}), 500
 
-        raw = re.sub(r"```.*?```", "", raw, flags=re.DOTALL)
+        raw = re.sub(r"```(?:json)?", "", raw)
+        raw = re.sub(r"```", "", raw)
         match = re.search(r"\{.*\}", raw, re.DOTALL)
 
         if not match:
-            return jsonify({"error": "AI vrátila špatný formát"}), 500
+            print("NO JSON IN RESPONSE:", raw[:300])
+            return jsonify({"error": "AI nevrátila JSON. Zkus to znovu."}), 500
 
-        data = json.loads(match.group())
+        try:
+            data = json.loads(match.group())
+        except json.JSONDecodeError as e:
+            print("JSON DECODE ERROR:", e, match.group()[:300])
+            return jsonify({"error": "AI vrátila poškozený JSON. Zkus to znovu."}), 500
 
         # ===== VYNUTIT 15 =====
         def fix(arr, typ):
