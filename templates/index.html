@@ -357,7 +357,7 @@ function skrytChybu() { document.getElementById('chybaZprava').style.display = '
 
 /* ==================== UPLOAD ==================== */
 async function nahratSoubor() {
-    const soubor   = document.getElementById('vstupSoubor').files[0];
+    const soubor = document.getElementById('vstupSoubor').files[0];
     if (!soubor) return alert("Vyberte soubor!");
 
     nazevSouboru = soubor.name;
@@ -370,33 +370,64 @@ async function nahratSoubor() {
 
     const fd = new FormData();
     fd.append("file", soubor);
-
-    const prezdivka = document.getElementById('vstupPrezdivka').value.trim() || 'Anonym';
-    fd.append("prezdivka", prezdivka);
+    fd.append("prezdivka", document.getElementById('vstupPrezdivka').value.trim() || 'Anonym');
 
     try {
-        const odpoved = await fetch("/upload", { method: "POST", body: fd });
-        const data    = await odpoved.json();
+        // 1) Pošli soubor — backend odpoví okamžitě s job_id
+        const uploadResp = await fetch("/upload", { method: "POST", body: fd });
+        const uploadData = await uploadResp.json();
 
-        if (data.error) throw new Error(data.error);
+        if (uploadData.error) throw new Error(uploadData.error);
+        if (!uploadData.job_id) throw new Error("Server nevrátil job_id.");
 
-        let parsovano;
-        try { parsovano = JSON.parse(data.result); }
-        catch { throw new Error("AI vrátila neplatná data. Zkus to znovu."); }
+        const jobId = uploadData.job_id;
 
-        if (!parsovano.flashcards || !parsovano.quiz)
-            throw new Error("Neplatný formát odpovědi od AI.");
+        // 2) Polling každé 3 sekundy dokud AI nedokončí
+        let ticks = 0;
+        const dots = ["⏳ AI generuje materiály.", "⏳ AI generuje materiály..", "⏳ AI generuje materiály..."];
+        const interval = setInterval(async () => {
+            nacitani.textContent = dots[ticks % 3];
+            ticks++;
 
-        uloziste      = parsovano;
-        indexKarticky = 0;
-        zobrazitKarticky();
-        zobrazitTest();
-        prepnoutTab('karticky');
+            try {
+                const statusResp = await fetch(`/status/${jobId}`);
+                const job = await statusResp.json();
+
+                if (job.status === "done") {
+                    clearInterval(interval);
+                    let parsovano;
+                    try { parsovano = JSON.parse(job.result); }
+                    catch { throw new Error("AI vrátila neplatná data."); }
+
+                    if (!parsovano.flashcards || !parsovano.quiz)
+                        throw new Error("Neplatný formát odpovědi od AI.");
+
+                    uloziste = parsovano;
+                    indexKarticky = 0;
+                    zobrazitKarticky();
+                    zobrazitTest();
+                    prepnoutTab('karticky');
+                    nacitani.style.display = "none";
+                    tlacitko.disabled = false;
+
+                } else if (job.status === "error") {
+                    clearInterval(interval);
+                    throw new Error(job.error || "AI vrátila chybu.");
+                }
+                // status === "pending" → čekáme dál
+
+            } catch(e) {
+                clearInterval(interval);
+                zobrazitChybu(e.message || "Neznámá chyba.");
+                console.error(e);
+                nacitani.style.display = "none";
+                tlacitko.disabled = false;
+            }
+        }, 3000);
 
     } catch(e) {
-        zobrazitChybu(e.message || "Neznámá chyba při generování materiálu.");
+        zobrazitChybu(e.message || "Neznámá chyba při odesílání souboru.");
         console.error(e);
-    } finally {
         nacitani.style.display = "none";
         tlacitko.disabled = false;
     }
